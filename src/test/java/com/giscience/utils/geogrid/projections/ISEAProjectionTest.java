@@ -28,7 +28,7 @@ import org.junit.Test;
  * @author Franz-Benjamin Mocnik
  */
 public class ISEAProjectionTest {
-    private final double _precision = 10e-10;
+    private final double _precision = 1e-9;
     private final int _iterations = 1000000;
     
     @Test
