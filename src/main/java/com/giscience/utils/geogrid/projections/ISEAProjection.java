@@ -14,8 +14,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.giscience.utils.geogrid.geometry;
+package com.giscience.utils.geogrid.projections;
 
+import com.giscience.utils.geogrid.coordinates.GeoCoordinates;
+import com.giscience.utils.geogrid.coordinates.FaceCoordinates;
 import com.giscience.utils.geogrid.generic.Trigonometric;
 
 /**
@@ -126,9 +128,9 @@ public class ISEAProjection {
         this._orientationLat = orientationLat;
         this._orientationLon = orientationLon;
     }
-
+    
     /**
-     * Sets the orientation of the icosahedron such that the north and the south poles are mapped to the edge midpoints of the icosahedron. The 
+     * Sets the orientation of the icosahedron such that the north and the south poles are mapped to the edge midpoints of the icosahedron. The equator is thus mapped symmetrically.
      */
     public void setOrientationSymmetricEquator() {
         this.setOrientation((90 + this.__E) / 2., 36.);
@@ -210,7 +212,6 @@ public class ISEAProjection {
         GeoCoordinates c2 = this._faceToSphere(c);
         return this._revertOrientation(c2);
     }
-    
     
     private FaceCoordinates _sphereToFace(GeoCoordinates c, Face face) {
         double Az_earth = Trigonometric.atan2(face.cosLat() * face.sinLonLon0(), face.cosLat0() * face.sinLat() - face.sinLat0() * face.cosLat() * face.cosLonLon0()); // Az

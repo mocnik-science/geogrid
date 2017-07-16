@@ -14,38 +14,36 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.giscience.utils.geogrid.geometry;
+package com.giscience.utils.geogrid.coordinates;
 
 /**
- * Cartesian Coordinates of a location on a face of a platonic solid.
+ * Geographic coordinates of a location on Earth.
  * 
  * @author Franz-Benjamin Mocnik
  */
-public class FaceCoordinates {
-    private final Integer _face;
-    private final Double _x;
-    private final Double _y;
+public class GeoCoordinates {
+    private final Double _lat;
+    private final Double _lon;
     
-    public FaceCoordinates(Integer face, Double x, Double y) {
-        this._face = face;
-        this._x = x;
-        this._y = y;
+    public GeoCoordinates(Double lat, Double lon) throws Exception {
+        if (lat < -90 || lat > 90) throw new Exception("invalid latitude");
+        lon = lon % 360;
+        if (lon > 180) lon -= 360;
+        else if (lon < -180) lon += 360;
+        this._lat = lat;
+        this._lon = lon;
     }
     
-    public Integer getFace() {
-        return this._face;
+    public Double getLat() {
+        return this._lat;
     }
     
-    public Double getX() {
-        return this._x;
-    }
-    
-    public Double getY() {
-        return this._y;
+    public Double getLon() {
+        return this._lon;
     }
     
     @Override
     public String toString() {
-        return String.format("face %d x %f y %f", this._face, this._x, this._y);
+        return String.format("lat %f lon %f", this._lat, this._lon);
     }
 }
