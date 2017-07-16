@@ -1,5 +1,6 @@
 nb-configuration.xml
 .idea/**
+*.iml
 */.swp
 target/**
 
