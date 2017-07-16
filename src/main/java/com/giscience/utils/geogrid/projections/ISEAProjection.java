@@ -16,8 +16,8 @@
  */
 package com.giscience.utils.geogrid.projections;
 
-import com.giscience.utils.geogrid.coordinates.GeoCoordinates;
-import com.giscience.utils.geogrid.coordinates.FaceCoordinates;
+import com.giscience.utils.geogrid.geometry.GeoCoordinates;
+import com.giscience.utils.geogrid.geometry.FaceCoordinates;
 import com.giscience.utils.geogrid.generic.Trigonometric;
 
 /**
@@ -56,7 +56,7 @@ public class ISEAProjection {
     private final double[] __lats = new double[20];
     private final int[] __lons = new int[20];
     // precision
-    private final double _precision = 10E-9;
+    private final double _precision = 10e-9;
     // tmp
     private final double _2R = 2 * this._R; // 2 R'
     private final double __EF = this.__E - this.__F; // E - F

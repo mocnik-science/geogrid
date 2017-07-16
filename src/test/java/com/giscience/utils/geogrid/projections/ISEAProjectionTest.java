@@ -16,8 +16,8 @@
  */
 package com.giscience.utils.geogrid.projections;
 
-import com.giscience.utils.geogrid.coordinates.FaceCoordinates;
-import com.giscience.utils.geogrid.coordinates.GeoCoordinates;
+import com.giscience.utils.geogrid.geometry.FaceCoordinates;
+import com.giscience.utils.geogrid.geometry.GeoCoordinates;
 import static org.junit.Assert.assertTrue;
 
 import com.giscience.utils.geogrid.generic.Trigonometric;
@@ -28,7 +28,7 @@ import org.junit.Test;
  * @author Franz-Benjamin Mocnik
  */
 public class ISEAProjectionTest {
-    private final double _precision = 10E-10;
+    private final double _precision = 10e-10;
     private final int _iterations = 1000000;
     
     @Test
