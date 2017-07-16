@@ -56,7 +56,7 @@ public class ISEAProjection {
     private final double[] __lats = new double[20];
     private final int[] __lons = new int[20];
     // precision
-    private final double _precision = Math.pow(10, -15);
+    private final double _precision = 10E-9;
     // tmp
     private final double _2R = 2 * this._R; // 2 R'
     private final double __EF = this.__E - this.__F; // E - F
@@ -285,7 +285,7 @@ public class ISEAProjection {
         double deltaAz = 10 * this._precision;
         double area_pi_R_earth2_180_G_180 = area / this._pi_R_earth2_180 - this._G_180;
         double Az_earth = Az;
-        while (deltaAz > this._precision) {
+        while (Math.abs(deltaAz) > this._precision) {
             double H = this._compute_H(Trigonometric.sin(Az_earth), Trigonometric.cos(Az_earth)); // H
             double FAz_earth = area_pi_R_earth2_180_G_180 - H - Az_earth; // F(Az) or g(Az)
             double F2Az_earth = (Trigonometric.cos(Az_earth) * this._sinG_cos_g + Trigonometric.sin(Az_earth) * this._cosG) / Trigonometric.sin(H) - 1; // F'(Az) or g'(Az)
