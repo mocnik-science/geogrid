@@ -114,15 +114,17 @@ public class ISEA3H {
      * @throws Exception
      */
     public FaceCoordinates cellForLocation(FaceCoordinates c) throws Exception {
-        double nxCenter = Math.round(c.getX() / (this._l2));
+        double x = (this._resolution % 2 == 0) ? c.getX() : c.getY();
+        double y = (this._resolution % 2 == 0) ? c.getY() : c.getX();
+        double nxCenter = Math.round(x / (this._l2));
         double xCenter = nxCenter * this._l2;
-        double nyCenter = Math.round(c.getY() / this._inverseSqrt3l);
+        double nyCenter = Math.round(y / this._inverseSqrt3l);
         double yCenter = nyCenter * this._inverseSqrt3l;
-        if (Math.abs(c.getX() - xCenter) <= this._l6) return this._faceCoordinatesSwapByResolution(c.getFace(), xCenter, yCenter);
-        if (Math.abs(c.getX() - xCenter) > this._l3) return this._faceCoordinatesSwapByResolution(c.getFace(), (c.getX() > xCenter) ? xCenter + this._l2 : xCenter - this._l2, (c.getY() > yCenter) ? yCenter + this._inverseSqrt3l2 : yCenter - this._inverseSqrt3l2);
+        if (Math.abs(x - xCenter) <= this._l6) return this._faceCoordinatesSwapByResolution(c.getFace(), xCenter, yCenter);
+        if (Math.abs(x - xCenter) > this._l3) return this._faceCoordinatesSwapByResolution(c.getFace(), (x > xCenter) ? xCenter + this._l2 : xCenter - this._l2, (y > yCenter) ? yCenter + this._inverseSqrt3l2 : yCenter - this._inverseSqrt3l2);
         else {
             FaceCoordinates cCandidate1 = this._faceCoordinatesSwapByResolution(c.getFace(), xCenter, yCenter);
-            FaceCoordinates cCandidate2 = this._faceCoordinatesSwapByResolution(c.getFace(), (c.getX() > xCenter) ? xCenter + this._l2 : xCenter - this._l2, (c.getY() > yCenter) ? yCenter + this._inverseSqrt3l2 : yCenter - this._inverseSqrt3l2);
+            FaceCoordinates cCandidate2 = this._faceCoordinatesSwapByResolution(c.getFace(), (x > xCenter) ? xCenter + this._l2 : xCenter - this._l2, (y > yCenter) ? yCenter + this._inverseSqrt3l2 : yCenter - this._inverseSqrt3l2);
             return (c.distanceTo(cCandidate1) < c.distanceTo(cCandidate2)) ? cCandidate1 : cCandidate2;
         }
     }
