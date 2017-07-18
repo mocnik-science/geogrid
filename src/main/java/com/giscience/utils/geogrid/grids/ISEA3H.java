@@ -31,6 +31,11 @@ import com.giscience.utils.geogrid.projections.ISEAProjection;
  * 
  * The cells of the grid are identified by the resolution and their center points.
  * 
+ * The ISEA3H has been proposed by:
+ * 
+ * Kevin Sahr, Denis White, and A. Jon Kimerling: Geodesic Discrete Global Grid Systems. Cartography and Geographic
+ * Information Science, 30(2), 121–134, 2003.
+ * 
  * @author Franz-Benjamin Mocnik
  */
 public class ISEA3H {
