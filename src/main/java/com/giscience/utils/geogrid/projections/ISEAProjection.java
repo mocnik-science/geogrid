@@ -23,15 +23,19 @@ import com.giscience.utils.geogrid.generic.Trigonometric;
 /**
  * Icosahedron Snyder equal-area (ISEA) projection
  * 
- * The ISEA projection is a projects a sphere on the icosahedron. Thereby the size of areas mapped to the icosahedron are preserved. Angles and distances are however slightly distorted. The angular distortion is below 17.27 degree, and the scale variation is less than 16.3 per cent.
+ * The ISEA projection is a projects a sphere on the icosahedron. Thereby the size of areas mapped to the icosahedron
+ * are preserved. Angles and distances are however slightly distorted. The angular distortion is below 17.27 degree, and
+ * the scale variation is less than 16.3 per cent.
  * 
  * The projection has been proposed and has been described in detail by:
  * 
- * John P. Snyder: An equal-area map projection for polyhedral globes. Cartographica, 29(1), 10–21, 1992. doi:10.3138/27H7-8K88-4882-1752
+ * John P. Snyder: An equal-area map projection for polyhedral globes. Cartographica, 29(1), 10–21, 1992.
+ * doi:10.3138/27H7-8K88-4882-1752
  * 
  * Another description and improvements can be found in:
  * 
- * Erika Harrison, Ali Mahdavi-Amiri, and Faramarz Samavati: Optimization of inverse Snyder polyhedral projection. International Conference on Cyberworlds 2011. doi:10.1109/CW.2011.36
+ * Erika Harrison, Ali Mahdavi-Amiri, and Faramarz Samavati: Optimization of inverse Snyder polyhedral projection.
+ * International Conference on Cyberworlds 2011. doi:10.1109/CW.2011.36
  * 
  * @author Franz-Benjamin Mocnik
  */
@@ -118,9 +122,11 @@ public class ISEAProjection {
     /**
      * Sets the orientation of the icosahedron.
      * 
-     * One corner of the icosahedron is, by default, facing to the north pole, and one to the south pole. The provided orientation is relative to the default orientation.
+     * One corner of the icosahedron is, by default, facing to the north pole, and one to the south pole. The provided
+     * orientation is relative to the default orientation.
      * 
-     * The orientation shifts every location by the angle <code>orientationLon</code> in direction of positive longitude, and thereafter by the angle <code>orientationLat</code> in direction of positive latitude.
+     * The orientation shifts every location by the angle <code>orientationLon</code> in direction of positive
+     * longitude, and thereafter by the angle <code>orientationLat</code> in direction of positive latitude.
      * 
      * @param orientationLat
      * @param orientationLon
@@ -131,7 +137,8 @@ public class ISEAProjection {
     }
     
     /**
-     * Sets the orientation of the icosahedron such that the north and the south poles are mapped to the edge midpoints of the icosahedron. The equator is thus mapped symmetrically.
+     * Sets the orientation of the icosahedron such that the north and the south poles are mapped to the edge midpoints
+     * of the icosahedron. The equator is thus mapped symmetrically.
      */
     public void setOrientationSymmetricEquator() {
         this.setOrientation((90 + this.__E) / 2., 36.);
@@ -317,7 +324,8 @@ public class ISEAProjection {
     }
     
     /**
-     * Tests whether coordinates c belong to face1 or face2. Assumes that the coordinates c belongs to one of these faces.
+     * Tests whether coordinates c belong to face1 or face2. Assumes that the coordinates c belongs to one of these
+     * faces.
      * 
      * @param c
      * @param face1
