@@ -30,11 +30,26 @@ public class ISEA3HTest {
     private final int _iterations = 1000000;
 
     @Test
-    public void pointsInGridCells() throws Exception {
-        ISEA3H grid = new ISEA3H(0);
+    public void pointsInGridCells0() throws Exception {
+        this._pointsInGridCells(0);
+    }
+    @Test
+    public void pointsInGridCells11() throws Exception {
+        this._pointsInGridCells(11);
+    }
+    @Test
+    public void pointsInGridCells12() throws Exception {
+        this._pointsInGridCells(12);
+    }
+    @Test
+    public void pointsInGridCells16() throws Exception {
+        this._pointsInGridCells(16);
+    }
+    private void _pointsInGridCells(int resolution) throws Exception {
+        ISEA3H grid = new ISEA3H(resolution);
         for (int i = 0; i < this._iterations; i++) {
             FaceCoordinates c = new FaceCoordinates(1, Math.random() * 100 - 50, Math.random() * 100 - 50);
-            assertTrue(c.distanceTo(grid.cellForLocation(c)) <= grid.getDiameterOfCell() / 2.);
+            assertTrue(c.distanceTo(grid.cellForLocation(c)) <= grid.getDiameterOfCell() / 2. + this._precision);
         }
     }
 }
