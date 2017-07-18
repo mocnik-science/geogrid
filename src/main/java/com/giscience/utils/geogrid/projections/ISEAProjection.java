@@ -42,7 +42,7 @@ import com.giscience.utils.geogrid.generic.Trigonometric;
 public class ISEAProjection {
     // radius
     private final double _R = .9449322893 * this._R_earth; // R'
-    private final double _R_earth = 1; // R
+    private final double _R_earth = 6371.007180918472841; // R // authalic sphere radius for WGS84 [km]
     // orientation
     private double _orientationLat = 0;
     private double _orientationLon = 0;
@@ -174,7 +174,7 @@ public class ISEAProjection {
      * 
      * @return maximum angular distortion
      */
-    public double getMaximumAngularDistortion() {
+    public double maximumAngularDistortion() {
         return this._omega;
     }
     
@@ -183,7 +183,7 @@ public class ISEAProjection {
      * 
      * @return maximum scale variation
      */
-    public double getMaximumScaleVariation() {
+    public double maximumScaleVariation() {
         return this._a;
     }
     
@@ -192,7 +192,7 @@ public class ISEAProjection {
      * 
      * @return minimum scale variation
      */
-    public double getMiniumScaleVariation() {
+    public double miniumScaleVariation() {
         return this._b;
     }
 
@@ -201,7 +201,7 @@ public class ISEAProjection {
      * 
      * @return length of the bases of the triangles
      */
-    public double getLengthOfTriangleBase() {
+    public double lengthOfTriangleBase() {
         return 2 * this.__G;
     }
     

@@ -16,9 +16,11 @@
  */
 package com.giscience.utils.geogrid.grids;
 
+import com.giscience.utils.geogrid.com.giscience.utils.geogrid.geo.WGS84;
 import com.giscience.utils.geogrid.geometry.FaceCoordinates;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -27,19 +29,36 @@ import static org.junit.Assert.assertTrue;
  */
 public class ISEA3HTest {
     private final double _precision = 1e-9;
+    private final double _precision2 = 1e-15;
     private final int _iterations = 1000000;
-
+    
     @Test
-    public void pointsInGridCells0() throws Exception {
-        this._pointsInGridCells(0);
+    public void numberOfCells() {
+        this._numberOfCells(1, 20);
+        this._numberOfCells(2, 80);
+        this._numberOfCells(3, 260);
+        this._numberOfCells(4, 800);
+        this._numberOfCells(15, 143489060);
+        this._numberOfCells(16, 430467200);
     }
+    public void _numberOfCells(int resolution, int numberOfHexagonCells) {
+        ISEA3H grid = new ISEA3H(resolution);
+        assertEquals(grid.numberOfHexagonCells(), numberOfHexagonCells);
+        assertEquals(grid.numberOfPentagonCells(), 12);
+        assertTrue(grid.numberOfHexagonCells() * grid.areaOfHexagonCell() + grid.numberOfPentagonCells() * grid.areaOfPentagonCell() - WGS84.areaOfEarth < WGS84.areaOfEarth * this._precision2);
+    }
+    
     @Test
-    public void pointsInGridCells11() throws Exception {
-        this._pointsInGridCells(11);
+    public void pointsInGridCells1() throws Exception {
+        this._pointsInGridCells(1);
     }
     @Test
     public void pointsInGridCells12() throws Exception {
         this._pointsInGridCells(12);
+    }
+    @Test
+    public void pointsInGridCells13() throws Exception {
+        this._pointsInGridCells(13);
     }
     @Test
     public void pointsInGridCells16() throws Exception {
@@ -49,7 +68,7 @@ public class ISEA3HTest {
         ISEA3H grid = new ISEA3H(resolution);
         for (int i = 0; i < this._iterations; i++) {
             FaceCoordinates c = new FaceCoordinates(1, Math.random() * 100 - 50, Math.random() * 100 - 50);
-            assertTrue(c.distanceTo(grid.cellForLocation(c)) <= grid.getDiameterOfCell() / 2. + this._precision);
+            assertTrue(c.distanceTo(grid.cellForLocation(c)) <= grid.diameterOfCellOnIcosahedron() / 2. + this._precision);
         }
     }
 }

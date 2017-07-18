@@ -16,6 +16,7 @@
  */
 package com.giscience.utils.geogrid.grids;
 
+import com.giscience.utils.geogrid.com.giscience.utils.geogrid.geo.WGS84;
 import com.giscience.utils.geogrid.geometry.FaceCoordinates;
 import com.giscience.utils.geogrid.geometry.GeoCoordinates;
 import com.giscience.utils.geogrid.geometry.GridCell;
@@ -39,50 +40,81 @@ import com.giscience.utils.geogrid.projections.ISEAProjection;
  * @author Franz-Benjamin Mocnik
  */
 public class ISEA3H {
-    private final int _resolution;
+    private final ISEAProjection _projection = new ISEAProjection();
+    private final int _resolution; // resolution - 1
+    private final int _numberOfHexagonCells;
+    private final int _numberOfPentagonCells = 12;
     private final double _l0; // length of the triangle base at resolution 0
     private final double _l; // length of the triangle base at the given resolution
     private final double _l2; // l / 2
     private final double _l3; // l / 3
     private final double _l6; // l / 6
     private final double _l23; // l * 2 / 3
-    private final ISEAProjection _projection = new ISEAProjection();
+    private final double _lsquare3; // l^2 / 3
     private final double _inverseSqrt3 = 1 / Math.sqrt(3);
     private final double _inverseSqrt3l;
     private final double _inverseSqrt3l2;
 
     public ISEA3H(int resolution) {
-        this._resolution = resolution;
         this._projection.setOrientationSymmetricEquator();
-        this._l0 = this._projection.getLengthOfTriangleBase();
+        this._resolution = resolution - 1;
+        int numberOfHexagonCells = 1;
+        for (int i = 0; i < this._resolution; i++) {
+            numberOfHexagonCells = 3 * numberOfHexagonCells + 1;
+        }
+        this._numberOfHexagonCells = 20 * numberOfHexagonCells;
+        this._l0 = this._projection.lengthOfTriangleBase();
         this._l = Math.pow(this._inverseSqrt3, this._resolution) * this._l0;
         this._l2 = this._l / 2.;
         this._l3 = this._l / 3.;
         this._l6 = this._l / 6.;
         this._l23 = this._l * 2 / 3.;
+        this._lsquare3 = Math.pow(this._l, 2) / 3.;
         this._inverseSqrt3l = this._inverseSqrt3 * this._l;
         this._inverseSqrt3l2 = this._inverseSqrt3l / 2.;
     }
-
+    
     /**
-     * Returns the diameter of a cell
-     * 
      * @return diameter of a cell
      */
-    public double getDiameterOfCell() {
+    public double diameterOfCellOnIcosahedron() {
         return this._l23;
     }
-
+    
     /**
-     * Returns the area of a cell. The cells should all have the same area by construction, because the ISEA projection
-     * is equal-area.
-     * 
-     * @return area of a cell
+     * Returns the area of a hexagon cell. The cells should all have the same area by construction, because the ISEA
+     * projection is equal-area.
+     *
+     * @return area of a hexagon cell
      */
-    public double getAreaOfCell() {
-        return this._l3;
+    public double areaOfHexagonCell() {
+        return WGS84.areaOfEarth / (this._numberOfHexagonCells + 5 / 6. * this._numberOfPentagonCells);
     }
-
+    
+    /**
+     * Returns the area of a pentagon cell. The cells should all have the same area by construction, because the ISEA
+     * projection is equal-area.
+     *
+     * @return area of a pentagoncell
+     */
+    public double areaOfPentagonCell() {
+        return 5 / 6. * this.areaOfHexagonCell();
+    }
+    
+    /**
+     * @return number of hexagon cells
+     */
+    public int numberOfHexagonCells() {
+        return this._numberOfHexagonCells;
+    }
+    
+    /**
+     * @return number of pentagon cells
+     */
+    public int numberOfPentagonCells() {
+        return this._numberOfPentagonCells;
+    }
+    
     /**
      * Returns the grid cell for a given location
      * 
