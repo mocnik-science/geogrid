@@ -16,7 +16,7 @@
  */
 package com.giscience.utils.geogrid.grids;
 
-import com.giscience.utils.geogrid.com.giscience.utils.geogrid.geo.WGS84;
+import com.giscience.utils.geogrid.geo.WGS84;
 import com.giscience.utils.geogrid.geometry.FaceCoordinates;
 import com.giscience.utils.geogrid.geometry.GeoCoordinates;
 import com.giscience.utils.geogrid.geometry.GridCell;

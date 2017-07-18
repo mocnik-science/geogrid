@@ -14,11 +14,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.giscience.utils.geogrid.com.giscience.utils.geogrid.geo;
+package com.giscience.utils.geogrid.geo;
 
 /**
  * Data about the World Geodetic System (WGS) 84 reference ellipsoid
- * 
+ *
  * @author Franz-Benjamin Mocnik
  */
 public class WGS84 {

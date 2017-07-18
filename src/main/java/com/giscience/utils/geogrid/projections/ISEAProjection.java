@@ -16,6 +16,7 @@
  */
 package com.giscience.utils.geogrid.projections;
 
+import com.giscience.utils.geogrid.geo.WGS84;
 import com.giscience.utils.geogrid.geometry.GeoCoordinates;
 import com.giscience.utils.geogrid.geometry.FaceCoordinates;
 import com.giscience.utils.geogrid.generic.Trigonometric;
@@ -42,7 +43,9 @@ import com.giscience.utils.geogrid.generic.Trigonometric;
 public class ISEAProjection {
     // radius
     private final double _R = .9449322893 * this._R_earth; // R'
-    private final double _R_earth = 6371.007180918472841; // R // authalic sphere radius for WGS84 [km]
+    private final double _R_earth = WGS84.radiusAuthalic; // R // authalic sphere radius for WGS84 [km]
+    // faces
+    private final int _numberOfFaces = 20;
     // orientation
     private double _orientationLat = 0;
     private double _orientationLon = 0;
