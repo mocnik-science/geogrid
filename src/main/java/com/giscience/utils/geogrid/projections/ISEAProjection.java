@@ -22,21 +22,21 @@ import com.giscience.utils.geogrid.generic.Trigonometric;
 
 /**
  * Icosahedron Snyder equal-area (ISEA) projection
- * 
+ *
  * The ISEA projection is a projects a sphere on the icosahedron. Thereby the size of areas mapped to the icosahedron
  * are preserved. Angles and distances are however slightly distorted. The angular distortion is below 17.27 degree, and
  * the scale variation is less than 16.3 per cent.
- * 
+ *
  * The projection has been proposed and has been described in detail by:
- * 
+ *
  * John P. Snyder: An equal-area map projection for polyhedral globes. Cartographica, 29(1), 10–21, 1992.
  * doi:10.3138/27H7-8K88-4882-1752
- * 
+ *
  * Another description and improvements can be found in:
- * 
+ *
  * Erika Harrison, Ali Mahdavi-Amiri, and Faramarz Samavati: Optimization of inverse Snyder polyhedral projection.
  * International Conference on Cyberworlds 2011. doi:10.1109/CW.2011.36
- * 
+ *
  * @author Franz-Benjamin Mocnik
  */
 public class ISEAProjection {
@@ -75,7 +75,7 @@ public class ISEAProjection {
     private final double _R_tan_g = this._R * this._tan_g; // R' \tan g
     private final double _sinG_cos_g = Trigonometric.sin(this._G) * Trigonometric.cos(this._g); // \sin G \cos g
     private final double _G_180 = this._G - 180; // G - 180
-    
+
     public ISEAProjection() {
         this.__lats[0] = this.__E;
         this.__lats[1] = this.__E;
@@ -118,16 +118,16 @@ public class ISEAProjection {
         this.__lons[18] = 108;
         this.__lons[19] = 180;
     }
-    
+
     /**
      * Sets the orientation of the icosahedron.
-     * 
+     *
      * One corner of the icosahedron is, by default, facing to the north pole, and one to the south pole. The provided
      * orientation is relative to the default orientation.
-     * 
+     *
      * The orientation shifts every location by the angle <code>orientationLon</code> in direction of positive
      * longitude, and thereafter by the angle <code>orientationLat</code> in direction of positive latitude.
-     * 
+     *
      * @param orientationLat
      * @param orientationLon
      */
@@ -135,7 +135,7 @@ public class ISEAProjection {
         this._orientationLat = orientationLat;
         this._orientationLon = orientationLon;
     }
-    
+
     /**
      * Sets the orientation of the icosahedron such that the north and the south poles are mapped to the edge midpoints
      * of the icosahedron. The equator is thus mapped symmetrically.
@@ -143,7 +143,7 @@ public class ISEAProjection {
     public void setOrientationSymmetricEquator() {
         this.setOrientation((90 + this.__E) / 2., 36.);
     }
-    
+
     private GeoCoordinates _changeOrientation(GeoCoordinates c) throws Exception {
         double sinOrientationLat = Trigonometric.sin(this._orientationLat);
         double cosOrientationLat = Trigonometric.cos(this._orientationLat);
@@ -156,7 +156,7 @@ public class ISEAProjection {
         double lon2 = Trigonometric.atan2(sinLon1 * cosLat1, cosLon1 * cosLat1 * cosOrientationLat - sinLat1 * sinOrientationLat);
         return new GeoCoordinates(lat2, lon2);
     }
-    
+
     private GeoCoordinates _revertOrientation(GeoCoordinates c) throws Exception {
         double sinOrientationLat = Trigonometric.sin(-this._orientationLat);
         double cosOrientationLat = Trigonometric.cos(this._orientationLat);
@@ -168,28 +168,28 @@ public class ISEAProjection {
         double lon2 = Trigonometric.atan2(sinLon1 * cosLat1, cosLon1 * cosLat1 * cosOrientationLat - sinLat1 * sinOrientationLat);
         return new GeoCoordinates(lat2, lon2 - this._orientationLon);
     }
-    
+
     /**
      * The projection distorts angles. This method returns the maximum angular distortion.
-     * 
+     *
      * @return maximum angular distortion
      */
     public double maximumAngularDistortion() {
         return this._omega;
     }
-    
+
     /**
      * The projection distorts scale. This method returns the maximum scale variation.
-     * 
+     *
      * @return maximum scale variation
      */
     public double maximumScaleVariation() {
         return this._a;
     }
-    
+
     /**
      * The projection distorts scale. This method returns the minimum scale variation.
-     * 
+     *
      * @return minimum scale variation
      */
     public double miniumScaleVariation() {
@@ -198,16 +198,16 @@ public class ISEAProjection {
 
     /**
      * Returns the length of the bases of the triangles of the icosahedron
-     * 
+     *
      * @return length of the bases of the triangles
      */
     public double lengthOfTriangleBase() {
         return 2 * this.__G;
     }
-    
+
     /**
      * Converts geographic coordinates to coordinates on the icosahedron.
-     * 
+     *
      * @param c geographic coordinates
      * @return coordinates on the icosahedron
      * @throws Exception
@@ -217,10 +217,10 @@ public class ISEAProjection {
         Face face = this._sphereToFace(c);
         return this._sphereToFace(c, face);
     }
-    
+
     /**
      * Converts geographic coordinates to coordinates on the icosahedron.
-     * 
+     *
      * @param c coordinates on the icosahedron
      * @return geographic coordinates
      * @throws Exception
@@ -229,7 +229,7 @@ public class ISEAProjection {
         GeoCoordinates c2 = this._faceToSphere(c);
         return this._revertOrientation(c2);
     }
-    
+
     private FaceCoordinates _sphereToFace(GeoCoordinates c, Face face) {
         double Az_earth = Trigonometric.atan2(face.cosLat() * face.sinLonLon0(), face.cosLat0() * face.sinLat() - face.sinLat0() * face.cosLat() * face.cosLonLon0()); // Az
         double AzAdjustment = 0;
@@ -254,7 +254,7 @@ public class ISEAProjection {
         double y = rho * Trigonometric.cos(Az - AzAdjustment); // y
         return new FaceCoordinates(face.getFace(), x, y);
     }
-    
+
     private Face _sphereToFace(GeoCoordinates c) {
         if (c.getLat() > this.__EF) {
             if (c.getLon() < -108) return new Face(1, this, c);
@@ -282,7 +282,7 @@ public class ISEAProjection {
             return this._sphereToFaceTestFaces(c, 10, 15);
         }
     }
-    
+
     private GeoCoordinates _faceToSphere(FaceCoordinates c) throws Exception {
         double Az = Trigonometric.atan2(c.getX(), c.getY()); // Az'
         double rho = Math.sqrt(Math.pow(c.getX(), 2) + Math.pow(c.getY(), 2)); // \rho
@@ -322,11 +322,11 @@ public class ISEAProjection {
         double lon = this._getLon(c) + Trigonometric.atan2(Trigonometric.sin(Az_earth) * sinZ * cosLat0, cosZ - sinLat0 * Trigonometric.sin(lat)); // \lambda
         return new GeoCoordinates(lat, lon);
     }
-    
+
     /**
      * Tests whether coordinates c belong to face1 or face2. Assumes that the coordinates c belongs to one of these
      * faces.
-     * 
+     *
      * @param c
      * @param face1
      * @param face2
@@ -337,7 +337,7 @@ public class ISEAProjection {
         Face f2 = new Face(face2, this, c);
         return (f1.z() <= f2.z()) ? f1 : f2;
     }
-    
+
     private double _compute_H(double sinAz_earth, double cosAz_earth) {
         return Trigonometric.acos(sinAz_earth * this._sinG_cos_g - cosAz_earth * this._cosG); // H
     }
@@ -350,7 +350,7 @@ public class ISEAProjection {
     private double _compute_q(double sinAz_earth, double cosAz_earth) {
         return Trigonometric.atan(this._tan_g / (cosAz_earth + sinAz_earth * this._cotTheta)); // q
     }
-    
+
     private double _getLat(Face f) {
         return this._getLat(f.getFace());
     }
@@ -369,7 +369,7 @@ public class ISEAProjection {
     private double _getLon(int f) {
         return this.__lons[f - 1];
     }
-    
+
     private class Face {
         private final int _face;
         private final ISEAProjection _iseaProjection;
@@ -381,17 +381,17 @@ public class ISEAProjection {
         private Double _cosLat0 = null;
         private Double _sinLonLon0 = null;
         private Double _cosLonLon0 = null;
-        
+
         public Face(int face, ISEAProjection iseaProjection, GeoCoordinates c) {
             this._face = face;
             this._iseaProjection = iseaProjection;
             this._c = c;
         }
-        
+
         public int getFace() {
             return this._face;
         }
-        
+
         protected double z() {
             if (this._z == null) this._z = Trigonometric.acos(this.sinLat0() * this.sinLat() + this.cosLat0() * this.cosLat() * this.cosLonLon0());
             return this._z;

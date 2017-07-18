@@ -18,7 +18,7 @@ package com.giscience.utils.geogrid.generic;
 
 /**
  * Trigonometric functions with degree instead of radians
- * 
+ *
  * @author Franz-Benjamin Mocnik
  */
 public class Trigonometric {

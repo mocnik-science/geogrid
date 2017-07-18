@@ -31,7 +31,7 @@ public class ISEA3HTest {
     private final double _precision = 1e-9;
     private final double _precision2 = 1e-15;
     private final int _iterations = 1000000;
-    
+
     @Test
     public void numberOfCells() {
         this._numberOfCells(1, 20);
@@ -47,7 +47,7 @@ public class ISEA3HTest {
         assertEquals(grid.numberOfPentagonCells(), 12);
         assertTrue(grid.numberOfHexagonCells() * grid.areaOfHexagonCell() + grid.numberOfPentagonCells() * grid.areaOfPentagonCell() - WGS84.areaOfEarth < WGS84.areaOfEarth * this._precision2);
     }
-    
+
     @Test
     public void pointsInGridCells1() throws Exception {
         this._pointsInGridCells(1);

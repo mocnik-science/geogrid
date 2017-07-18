@@ -24,19 +24,19 @@ import com.giscience.utils.geogrid.projections.ISEAProjection;
 
 /**
  * ISEA Aperture 3 Hexagon (ISEA3H) Discrete Global Grid System (DGGS)
- * 
+ *
  * The ISEA3H grid is constructed by using the icosahedron Snyder equal-area (ISEA) projection to map the surface of the
  * Earth to the icosahedron. Thereby, the orientation of the icosahedron is chosen such that the north and the south
  * poles are mapped to the edge midpoints of the icosahedron. The equator is thus mapped symmetrically. A grid
  * (aperture 3) is constructed on the icosahedron, and this grid is mapped back by the inverse projection to the Earth.
- * 
+ *
  * The cells of the grid are identified by the resolution and their center points.
- * 
+ *
  * The ISEA3H has been proposed by:
- * 
+ *
  * Kevin Sahr, Denis White, and A. Jon Kimerling: Geodesic Discrete Global Grid Systems. Cartography and Geographic
  * Information Science, 30(2), 121–134, 2003.
- * 
+ *
  * @author Franz-Benjamin Mocnik
  */
 public class ISEA3H {
@@ -73,14 +73,14 @@ public class ISEA3H {
         this._inverseSqrt3l = this._inverseSqrt3 * this._l;
         this._inverseSqrt3l2 = this._inverseSqrt3l / 2.;
     }
-    
+
     /**
      * @return diameter of a cell
      */
     public double diameterOfCellOnIcosahedron() {
         return this._l23;
     }
-    
+
     /**
      * Returns the area of a hexagon cell. The cells should all have the same area by construction, because the ISEA
      * projection is equal-area.
@@ -90,7 +90,7 @@ public class ISEA3H {
     public double areaOfHexagonCell() {
         return WGS84.areaOfEarth / (this._numberOfHexagonCells + 5 / 6. * this._numberOfPentagonCells);
     }
-    
+
     /**
      * Returns the area of a pentagon cell. The cells should all have the same area by construction, because the ISEA
      * projection is equal-area.
@@ -100,24 +100,24 @@ public class ISEA3H {
     public double areaOfPentagonCell() {
         return 5 / 6. * this.areaOfHexagonCell();
     }
-    
+
     /**
      * @return number of hexagon cells
      */
     public int numberOfHexagonCells() {
         return this._numberOfHexagonCells;
     }
-    
+
     /**
      * @return number of pentagon cells
      */
     public int numberOfPentagonCells() {
         return this._numberOfPentagonCells;
     }
-    
+
     /**
      * Returns the grid cell for a given location
-     * 
+     *
      * @param lat latitude
      * @param lon longitude
      * @return corresponding grid cell
@@ -129,7 +129,7 @@ public class ISEA3H {
 
     /**
      * Returns the grid cell for a given location
-     * 
+     *
      * @param c geographic coordinates
      * @return corresponding grid cell
      * @throws Exception
@@ -140,7 +140,7 @@ public class ISEA3H {
 
     /**
      * Returns the coordinates of the center of the corresponding grid cell for given coordinates in the face
-     * 
+     *
      * @param c face coordinates
      * @return face coordinates of the center of the corresponding grid cell
      * @throws Exception

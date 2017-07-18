@@ -18,14 +18,14 @@ package com.giscience.utils.geogrid.geometry;
 
 /**
  * Geographic coordinates of a location on Earth.
- * 
+ *
  * @author Franz-Benjamin Mocnik
  */
 public class GridCell {
     private final Integer _resolution;
     private final Double _lat;
     private final Double _lon;
-    
+
     public GridCell(int resolution, Double lat, Double lon) throws Exception {
         if (resolution < 0 || resolution > 18) throw new Exception("resolution must be between 0 and 18");
         this._resolution = resolution;
@@ -36,19 +36,19 @@ public class GridCell {
         this._lat = lat;
         this._lon = lon;
     }
-    
+
     public GridCell(int resolution, GeoCoordinates c) throws Exception {
         this(resolution, c.getLat(), c.getLon());
     }
-    
+
     public Integer getResolution() {
         return this._resolution;
     }
-    
+
     public Double getLat() {
         return this._lat;
     }
-    
+
     public Double getLon() {
         return this._lon;
     }
@@ -61,9 +61,9 @@ public class GridCell {
      *     <li>The consecutive digits consist of the latitude, with two pre-decimal and six decimal places.</li>
      *     <li>The consecutive digits consist of the longitude, with three pre-decimal and six decimal places.</li>
      * </ul>
-     * 
+     *
      * The id is only valid for resolution smaller less or equal 18.
-     * 
+     *
      * @return id of the cell
      */
     public Long getId() {
@@ -71,7 +71,7 @@ public class GridCell {
         long sgnLon = (this._lon < 0) ? 40 : 0;
         return (this._resolution.longValue() + sgnLat + sgnLon) * (long) 1e17 + Math.abs(Math.round(this._lat * 1e6)) * (long) 1e9 + Math.abs(Math.round(this._lon * 1e6));
     }
-    
+
     @Override
     public String toString() {
         return String.format("resolution %d lat %f lon %f - %d", this._resolution, this._lat, this._lon, this.getId());
