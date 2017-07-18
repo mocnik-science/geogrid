@@ -53,6 +53,7 @@ public class ISEAProjection {
     // face constants
     private final double __E = 90 - this._g; // E
     private final double __F = 10.81231696; // F
+    private final double __G = this._R_earth * Trigonometric.tan(this._g) * Math.sqrt(3) / 2.; // G
     private final double[] __lats = new double[20];
     private final int[] __lons = new int[20];
     // precision
@@ -186,6 +187,15 @@ public class ISEAProjection {
      */
     public double getMiniumScaleVariation() {
         return this._b;
+    }
+
+    /**
+     * Returns the length of the bases of the triangles of the icosahedron
+     * 
+     * @return length of the bases of the triangles
+     */
+    public double getLengthOfTriangleBase() {
+        return 2 * this.__G;
     }
     
     /**
