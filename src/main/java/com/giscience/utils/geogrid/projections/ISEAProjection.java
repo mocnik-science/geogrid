@@ -123,6 +123,13 @@ public class ISEAProjection {
     }
 
     /**
+     * @return number of faces of the icosahedron
+     */
+    public int numberOfFaces() {
+        return this._numberOfFaces;
+    }
+
+    /**
      * Sets the orientation of the icosahedron.
      *
      * One corner of the icosahedron is, by default, facing to the north pole, and one to the south pole. The provided
@@ -218,7 +225,25 @@ public class ISEAProjection {
     public FaceCoordinates sphereToIcosahedron(GeoCoordinates c) throws Exception {
         c = this._changeOrientation(c);
         Face face = this._sphereToFace(c);
-        return this._sphereToFace(c, face);
+        return this.sphereToFace(c, face);
+    }
+
+    /**
+     * Converts geographic coordinates to the coordinate system of a plane which contains a face of the icosahedron.
+     *
+     * <b>CAUTION</b>: This function should only be used very rarely.  It generates coordinates which may not lay on the
+     * faces themselves but only on the planes of the faces.  In case the given face equals the one that the given
+     * coordinates would be projected to, the coordinates coincide.
+     *
+     * This function is useful for computing the overlap of bounding boxes or areas and a given face.
+     *
+     * @param c geographic coordinates
+     * @return coordinates on the plane of the faces of the icosahedron
+     * @throws Exception
+     */
+    public FaceCoordinates sphereToPlanesOfTheFacesOfTheIcosahedron(int face, GeoCoordinates c) throws Exception {
+        c = this._changeOrientation(c);
+        return this.sphereToFace(c, new Face(face, this, c));
     }
 
     /**
@@ -233,7 +258,7 @@ public class ISEAProjection {
         return this._revertOrientation(c2);
     }
 
-    private FaceCoordinates _sphereToFace(GeoCoordinates c, Face face) {
+    private FaceCoordinates sphereToFace(GeoCoordinates c, Face face) {
         double Az_earth = Trigonometric.atan2(face.cosLat() * face.sinLonLon0(), face.cosLat0() * face.sinLat() - face.sinLat0() * face.cosLat() * face.cosLonLon0()); // Az
         double AzAdjustment = 0;
         while (Az_earth < 0) {
@@ -256,6 +281,16 @@ public class ISEAProjection {
         double x = rho * Trigonometric.sin(Az - AzAdjustment); // x
         double y = rho * Trigonometric.cos(Az - AzAdjustment); // y
         return new FaceCoordinates(face.getFace(), x, y);
+    }
+
+    /**
+     * Returns the corresponding face for given coordinates
+     *
+     * @param c coordinates
+     * @return face that the coordinates belongs to
+     */
+    public int sphereToFace(GeoCoordinates c) {
+        return this._sphereToFace(c).getFace();
     }
 
     private Face _sphereToFace(GeoCoordinates c) {
