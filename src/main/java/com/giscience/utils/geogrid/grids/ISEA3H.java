@@ -16,11 +16,14 @@
  */
 package com.giscience.utils.geogrid.grids;
 
+import com.giscience.utils.geogrid.generic.Tuple;
 import com.giscience.utils.geogrid.geo.WGS84;
 import com.giscience.utils.geogrid.geometry.FaceCoordinates;
 import com.giscience.utils.geogrid.geometry.GeoCoordinates;
 import com.giscience.utils.geogrid.geometry.GridCell;
 import com.giscience.utils.geogrid.projections.ISEAProjection;
+
+import java.util.*;
 
 /**
  * ISEA Aperture 3 Hexagon (ISEA3H) Discrete Global Grid System (DGGS)
@@ -54,6 +57,10 @@ public class ISEA3H {
     private final double _inverseSqrt3 = 1 / Math.sqrt(3);
     private final double _inverseSqrt3l;
     private final double _inverseSqrt3l2;
+    private final double _triangleA; // l0 / 2 // half base
+    private final double _triangleB; // 1/4 * (2 \sqrt{3} - 1) * l0 // distance center point to tip
+    private final double _triangleC; // 1/4 * l0 // distance base to center point
+    private final double _triangleBC; // \sqrt{3} / 2 * l0 // height
 
     public ISEA3H(int resolution) {
         this._projection.setOrientationSymmetricEquator();
@@ -72,6 +79,10 @@ public class ISEA3H {
         this._lsquare3 = Math.pow(this._l, 2) / 3.;
         this._inverseSqrt3l = this._inverseSqrt3 * this._l;
         this._inverseSqrt3l2 = this._inverseSqrt3l / 2.;
+        this._triangleA = this._l0 / 2.;
+        this._triangleB = 1 / 4. * (2 * Math.sqrt(3) - 1) * this._l0;
+        this._triangleC = 1 / 4. * this._l0;
+        this._triangleBC = Math.sqrt(3) / 2. * this._l0;
     }
 
     /**
@@ -162,6 +173,74 @@ public class ISEA3H {
     }
 
     /**
+     * Returns cells that are inside the bounds, or at least very near. Note that, in fact, all cells are included,
+     * whose center points are less than
+     *
+     * @param lat1
+     * @param lat2
+     * @param lon1
+     * @param lon2
+     * @return cells inside the bounds
+     */
+    public Collection<GridCell> cellsForBound(double lat1, double lat2, double lon1, double lon2) throws Exception {
+        Set<GridCell> cells = new HashSet<>();
+        for (int f = 1; f <= this._projection.numberOfFaces(); f++) cells.addAll(_cellsForBound(f, lat1, lat2, lon1, lon2));
+        return cells;
+    }
+
+    private Tuple<Integer, Integer> _integerForFaceCoordinates(FaceCoordinates c) {
+        int nx2 = (int)Math.round(c.getX() / this._l2);
+        int ny2 = (int)Math.round(c.getY() / this._inverseSqrt3l - ((nx2 % 2 == 0) ? 0 : .5));
+        int nx = (this._resolution % 2 == 0) ? nx2 : ny2;
+        int ny = (this._resolution % 2 == 0) ? ny2 : nx2;
+        return new Tuple(nx, ny);
+    }
+
+    private FaceCoordinates _cellCoordinatesForLocationAndFace(int face, GeoCoordinates c) throws Exception {
+        return this.cellForLocation(this._projection.sphereToPlanesOfTheFacesOfTheIcosahedron(face, c));
+    }
+
+    private Collection<GridCell> _cellsForBound(int face, double lat1, double lat2, double lon1, double lon2) throws Exception {
+        Set<GridCell> cells = new HashSet<>();
+
+        // bounding box of face (triangle)
+        double size1 = this._l0 / 3.;
+        double size2 = this._l0 * this._inverseSqrt3 / 2.;
+        double sizeX = this._coordinatesNotSwapped() ? size1 : size2;
+        double sizeY = this._coordinatesNotSwapped() ? size2 : size1;
+
+        // coordinates for vertices of bbox
+        FaceCoordinates fc1 = this._cellCoordinatesForLocationAndFace(face, new GeoCoordinates(lat1, lon1));
+        FaceCoordinates fc2 = this._cellCoordinatesForLocationAndFace(face, new GeoCoordinates(lat1, lon2));
+        FaceCoordinates fc3 = this._cellCoordinatesForLocationAndFace(face, new GeoCoordinates(lat2, lon1));
+        FaceCoordinates fc4 = this._cellCoordinatesForLocationAndFace(face, new GeoCoordinates(lat2, lon2));
+
+        // find minimum and maximum values
+        double xMin = Math.min(fc1.getX(), Math.min(fc2.getX(), Math.min(fc3.getX(), fc4.getX())));
+        double yMin = Math.min(fc1.getY(), Math.min(fc2.getY(), Math.min(fc3.getY(), fc4.getY())));
+        double xMax = Math.max(fc1.getX(), Math.max(fc2.getX(), Math.max(fc3.getX(), fc4.getX())));
+        double yMax = Math.max(fc1.getY(), Math.max(fc2.getY(), Math.max(fc3.getY(), fc4.getY())));
+
+        // check whether bbox intersects face
+        double buffer = this._l;
+        if (xMin - buffer > sizeX || xMax + buffer < -sizeX || yMin - buffer > sizeY || yMax + buffer < -sizeY) return cells;
+
+        // compute cells
+        Tuple<Integer, Integer> fcMinN = this._integerForFaceCoordinates(this.cellForLocation(new FaceCoordinates(face, xMin, yMin)));
+        Tuple<Integer, Integer> fcMaxN = this._integerForFaceCoordinates(this.cellForLocation(new FaceCoordinates(face, xMax, yMax)));
+        for (int nx = fcMinN._1 - 1; nx <= fcMaxN._1 + 1; nx++) {
+            for (int ny = fcMinN._2 - 1; ny <= fcMaxN._2 + 1; ny++) {
+                FaceCoordinates fc = this._getCoordinatesOfCenter(face, nx, ny);
+                if (this._isCoordinatesInFace(fc)) {
+                    cells.add(new GridCell(this._resolution, this._projection.icosahedronToSphere(fc)));
+                }
+            }
+        }
+
+        return cells;
+    }
+
+    /**
      * @param face face to compute the coordinates on
      * @param nx steps into the direction of the vertex of the hexagon
      * @param ny steps into the direction of the edge of the hexagon
@@ -171,12 +250,30 @@ public class ISEA3H {
         double x = nx * this._l2;
         double y = (ny + ((nx % 2 == 0) ? 0 : .5)) * this._inverseSqrt3l;
         return this._faceCoordinatesSwapByResolution(face, x, y);
+    }
 
-        // check for out of scope
+    private boolean _isCoordinatesInFace(FaceCoordinates fc) {
+        double x = this._coordinatesNotSwapped() ? fc.getX() : fc.getY();
+        double y = this._coordinatesNotSwapped() ? fc.getY() : fc.getX();
 
+        // cell orientation
+        short d;
+        if (fc.getFace() <= 5 || fc.getFace() >= 11 && fc.getFace() <= 15) d = 1;
+        else d = -1;
+
+        // test whether coordinate is left of the triangle, right of the triangle, or below the triangle
+        if (x * this._triangleBC / this._triangleA + this._triangleB < d * y) return false;
+        if (- x * this._triangleBC / this._triangleA + this._triangleB < d * y) return false;
+        if (d * y < - this._triangleC) return false;
+
+        return true;
     }
 
     private FaceCoordinates _faceCoordinatesSwapByResolution(int face, double x, double y) {
-        return new FaceCoordinates(face, (this._resolution % 2 == 0) ? x : y, (this._resolution % 2 == 0) ? y : x);
+        return new FaceCoordinates(face, this._coordinatesNotSwapped() ? x : y, this._coordinatesNotSwapped() ? y : x);
+    }
+
+    private boolean _coordinatesNotSwapped() {
+        return this._resolution % 2 == 0;
     }
 }
