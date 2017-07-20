@@ -23,10 +23,10 @@ package com.giscience.utils.geogrid.geometry;
  */
 public class GridCell {
     private final Integer _resolution;
-    private final Double _lat;
-    private final Double _lon;
+    private final double _lat;
+    private final double _lon;
 
-    public GridCell(int resolution, Double lat, Double lon) throws Exception {
+    public GridCell(int resolution, double lat, double lon) throws Exception {
         if (resolution < 0 || resolution > 18) throw new Exception("resolution must be between 0 and 18");
         this._resolution = resolution;
         if (lat < -90 || lat > 90) throw new Exception("invalid latitude");
@@ -70,6 +70,14 @@ public class GridCell {
         long sgnLat = (this._lat < 0) ? 20 : 0;
         long sgnLon = (this._lon < 0) ? 40 : 0;
         return (this._resolution.longValue() + sgnLat + sgnLon) * (long) 1e17 + Math.abs(Math.round(this._lat * 1e6)) * (long) 1e9 + Math.abs(Math.round(this._lon * 1e6));
+    }
+
+    public boolean equals(Object o) {
+        return (o instanceof GridCell) && ((GridCell) o).getId().equals(this.getId());
+    }
+
+    public int hashCode() {
+        return Long.hashCode(this.getId());
     }
 
     @Override
