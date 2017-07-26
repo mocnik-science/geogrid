@@ -14,13 +14,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.giscience.utils.geogrid.projections;
+package org.giscience.utils.geogrid.projections;
 
-import com.giscience.utils.geogrid.geometry.FaceCoordinates;
-import com.giscience.utils.geogrid.geometry.GeoCoordinates;
+import org.giscience.utils.geogrid.geometry.FaceCoordinates;
+import org.giscience.utils.geogrid.geometry.GeoCoordinates;
 import static org.junit.Assert.assertTrue;
 
-import com.giscience.utils.geogrid.generic.Trigonometric;
+import org.giscience.utils.geogrid.generic.Trigonometric;
 import org.junit.Test;
 
 /**

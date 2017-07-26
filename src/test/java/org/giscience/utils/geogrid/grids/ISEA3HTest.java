@@ -14,10 +14,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.giscience.utils.geogrid.grids;
+package org.giscience.utils.geogrid.grids;
 
-import com.giscience.utils.geogrid.geo.WGS84;
-import com.giscience.utils.geogrid.geometry.FaceCoordinates;
+import org.giscience.utils.geogrid.geo.WGS84;
+import org.giscience.utils.geogrid.geometry.FaceCoordinates;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

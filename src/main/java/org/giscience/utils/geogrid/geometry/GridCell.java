@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.giscience.utils.geogrid.geometry;
+package org.giscience.utils.geogrid.geometry;
 
 /**
  * Geographic coordinates of a location on Earth.

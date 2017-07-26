@@ -14,17 +14,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.giscience.utils.geogrid.geo;
+package org.giscience.utils.geogrid.generic;
 
 /**
- * Data about the World Geodetic System (WGS) 84 reference ellipsoid
  *
  * @author Franz-Benjamin Mocnik
  */
-public class WGS84 {
-    public static final double semiMajorAxis = 6378.137; // [km]
-    public static final double inverseFlattening = 1 / 298.257223563; // []
-    public static final double semiMinorAxis = (1 - inverseFlattening) * WGS84.semiMajorAxis; // [km]
-    public static final double radiusAuthalic = 6371.0071809184728409; // [km]
-    public static final double areaOfEarth = 510065621.72408837080; // [km^2]
+public class Tuple<T1, T2> {
+    public final T1 _1;
+    public final T2 _2;
+
+    public Tuple(T1 arg1, T2 arg2){
+        super();
+        this._1 = arg1;
+        this._2 = arg2;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("(%s, %s)", this._1, this._2);
+    }
 }

@@ -14,14 +14,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.giscience.utils.geogrid.grids;
+package org.giscience.utils.geogrid.grids;
 
-import com.giscience.utils.geogrid.generic.Tuple;
-import com.giscience.utils.geogrid.geo.WGS84;
-import com.giscience.utils.geogrid.geometry.FaceCoordinates;
-import com.giscience.utils.geogrid.geometry.GeoCoordinates;
-import com.giscience.utils.geogrid.geometry.GridCell;
-import com.giscience.utils.geogrid.projections.ISEAProjection;
+import org.giscience.utils.geogrid.generic.Tuple;
+import org.giscience.utils.geogrid.geo.WGS84;
+import org.giscience.utils.geogrid.geometry.FaceCoordinates;
+import org.giscience.utils.geogrid.geometry.GeoCoordinates;
+import org.giscience.utils.geogrid.geometry.GridCell;
+import org.giscience.utils.geogrid.projections.ISEAProjection;
 
 import java.util.*;
 

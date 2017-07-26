@@ -14,36 +14,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.giscience.utils.geogrid.geometry;
+package org.giscience.utils.geogrid.geo;
 
 /**
- * Geographic coordinates of a location on Earth.
+ * Data about the World Geodetic System (WGS) 84 reference ellipsoid
  *
  * @author Franz-Benjamin Mocnik
  */
-public class GeoCoordinates {
-    private final Double _lat;
-    private final Double _lon;
-
-    public GeoCoordinates(Double lat, Double lon) throws Exception {
-        if (lat < -90 || lat > 90) throw new Exception("invalid latitude");
-        lon = lon % 360;
-        if (lon > 180) lon -= 360;
-        else if (lon < -180) lon += 360;
-        this._lat = lat;
-        this._lon = lon;
-    }
-
-    public Double getLat() {
-        return this._lat;
-    }
-
-    public Double getLon() {
-        return this._lon;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("lat %f lon %f", this._lat, this._lon);
-    }
+public class WGS84 {
+    public static final double semiMajorAxis = 6378.137; // [km]
+    public static final double inverseFlattening = 1 / 298.257223563; // []
+    public static final double semiMinorAxis = (1 - inverseFlattening) * WGS84.semiMajorAxis; // [km]
+    public static final double radiusAuthalic = 6371.0071809184728409; // [km]
+    public static final double areaOfEarth = 510065621.72408837080; // [km^2]
 }
