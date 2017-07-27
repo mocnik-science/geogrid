@@ -183,7 +183,7 @@ public class ISEA3H {
      */
     public GridCell cellForCentroid(Geometry g) throws Exception {
         Coordinate c = g.getCentroid().getCoordinate();
-        return this.cellForLocation(c.x, c.y);
+        return this.cellForLocation(c.y, c.x);
     }
 
     /**
