@@ -159,17 +159,29 @@ public class ISEA3H {
      * @throws Exception
      */
     public FaceCoordinates cellForLocation(FaceCoordinates c) throws Exception {
-        double x = (this._resolution % 2 == 0) ? c.getX() : c.getY();
-        double y = (this._resolution % 2 == 0) ? c.getY() : c.getX();
+        double x = (this._coordinatesNotSwapped()) ? c.getX() : c.getY();
+        double y = (this._coordinatesNotSwapped()) ? c.getY() : c.getX();
         double nxCenter = Math.round(x / (this._l2));
         double xCenter = nxCenter * this._l2;
-        double nyCenter = Math.round(y / this._inverseSqrt3l);
-        double yCenter = nyCenter * this._inverseSqrt3l;
-        if (Math.abs(x - xCenter) <= this._l6) return this._faceCoordinatesSwapByResolution(c.getFace(), xCenter, yCenter);
-        if (Math.abs(x - xCenter) > this._l3) return this._faceCoordinatesSwapByResolution(c.getFace(), (x > xCenter) ? xCenter + this._l2 : xCenter - this._l2, (y > yCenter) ? yCenter + this._inverseSqrt3l2 : yCenter - this._inverseSqrt3l2);
+        if (Math.abs(x - xCenter) <= this._l6) {
+            double nyCenter12;
+            double yCenter12;
+            if (nxCenter % 2 == 0) {
+                nyCenter12 = Math.round(y / this._inverseSqrt3l);
+                yCenter12 = nyCenter12 * this._inverseSqrt3l;
+            } else {
+                nyCenter12 = Math.round((y - this._inverseSqrt3l2) / this._inverseSqrt3l);
+                yCenter12 = nyCenter12 * this._inverseSqrt3l + this._inverseSqrt3l2;
+            }
+            return this._faceCoordinatesSwapByResolution(c.getFace(), xCenter, yCenter12);
+        }
         else {
-            FaceCoordinates cCandidate1 = this._faceCoordinatesSwapByResolution(c.getFace(), xCenter, yCenter);
-            FaceCoordinates cCandidate2 = this._faceCoordinatesSwapByResolution(c.getFace(), (x > xCenter) ? xCenter + this._l2 : xCenter - this._l2, (y > yCenter) ? yCenter + this._inverseSqrt3l2 : yCenter - this._inverseSqrt3l2);
+            double nyCenter1 = Math.round(y / this._inverseSqrt3l);
+            double yCenter1 = nyCenter1 * this._inverseSqrt3l;
+            double nyCenter2 = Math.round((y - this._inverseSqrt3l2) / this._inverseSqrt3l);
+            double yCenter2 = nyCenter2 * this._inverseSqrt3l + this._inverseSqrt3l2;
+            FaceCoordinates cCandidate1 = this._faceCoordinatesSwapByResolution(c.getFace(), xCenter, (nxCenter % 2 == 0) ? yCenter1 : yCenter2);
+            FaceCoordinates cCandidate2 = this._faceCoordinatesSwapByResolution(c.getFace(), (x > xCenter) ? xCenter + this._l2 : xCenter - this._l2, (nxCenter % 2 != 0) ? yCenter1 : yCenter2);
             return (c.distanceTo(cCandidate1) < c.distanceTo(cCandidate2)) ? cCandidate1 : cCandidate2;
         }
     }
