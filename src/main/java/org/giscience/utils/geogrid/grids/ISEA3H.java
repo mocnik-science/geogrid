@@ -190,15 +190,15 @@ public class ISEA3H {
      * Returns cells that are inside the bounds, or at least very near. Note that, in fact, all cells are included,
      * whose center points are less than
      *
+     * @param lat0
      * @param lat1
-     * @param lat2
+     * @param lon0
      * @param lon1
-     * @param lon2
      * @return cells inside the bounds
      */
-    public Collection<GridCell> cellsForBound(double lat1, double lat2, double lon1, double lon2) throws Exception {
+    public Collection<GridCell> cellsForBound(double lat0, double lat1, double lon0, double lon1) throws Exception {
         Set<GridCell> cells = new HashSet<>();
-        for (int f = 1; f <= this._projection.numberOfFaces(); f++) cells.addAll(_cellsForBound(f, lat1, lat2, lon1, lon2));
+        for (int f = 1; f <= this._projection.numberOfFaces(); f++) cells.addAll(_cellsForBound(f, lat0, lat1, lon0, lon1));
         return cells;
     }
 
@@ -214,7 +214,7 @@ public class ISEA3H {
         return this.cellForLocation(this._projection.sphereToPlanesOfTheFacesOfTheIcosahedron(face, c));
     }
 
-    private Collection<GridCell> _cellsForBound(int face, double lat1, double lat2, double lon1, double lon2) throws Exception {
+    private Collection<GridCell> _cellsForBound(int face, double lat0, double lat1, double lon0, double lon1) throws Exception {
         Set<GridCell> cells = new HashSet<>();
 
         // bounding box of face (triangle)
@@ -224,10 +224,10 @@ public class ISEA3H {
         double sizeY = this._coordinatesNotSwapped() ? size2 : size1;
 
         // coordinates for vertices of bbox
-        FaceCoordinates fc1 = this._cellCoordinatesForLocationAndFace(face, new GeoCoordinates(lat1, lon1));
-        FaceCoordinates fc2 = this._cellCoordinatesForLocationAndFace(face, new GeoCoordinates(lat1, lon2));
-        FaceCoordinates fc3 = this._cellCoordinatesForLocationAndFace(face, new GeoCoordinates(lat2, lon1));
-        FaceCoordinates fc4 = this._cellCoordinatesForLocationAndFace(face, new GeoCoordinates(lat2, lon2));
+        FaceCoordinates fc1 = this._cellCoordinatesForLocationAndFace(face, new GeoCoordinates(lat0, lon0));
+        FaceCoordinates fc2 = this._cellCoordinatesForLocationAndFace(face, new GeoCoordinates(lat0, lon1));
+        FaceCoordinates fc3 = this._cellCoordinatesForLocationAndFace(face, new GeoCoordinates(lat1, lon0));
+        FaceCoordinates fc4 = this._cellCoordinatesForLocationAndFace(face, new GeoCoordinates(lat1, lon1));
 
         // find minimum and maximum values
         double xMin = Math.min(fc1.getX(), Math.min(fc2.getX(), Math.min(fc3.getX(), fc4.getX())));
