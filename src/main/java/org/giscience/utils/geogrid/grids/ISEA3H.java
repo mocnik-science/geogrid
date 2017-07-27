@@ -16,6 +16,8 @@
  */
 package org.giscience.utils.geogrid.grids;
 
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
 import org.giscience.utils.geogrid.generic.Tuple;
 import org.giscience.utils.geogrid.geo.WGS84;
 import org.giscience.utils.geogrid.geometry.FaceCoordinates;
@@ -170,6 +172,18 @@ public class ISEA3H {
             FaceCoordinates cCandidate2 = this._faceCoordinatesSwapByResolution(c.getFace(), (x > xCenter) ? xCenter + this._l2 : xCenter - this._l2, (y > yCenter) ? yCenter + this._inverseSqrt3l2 : yCenter - this._inverseSqrt3l2);
             return (c.distanceTo(cCandidate1) < c.distanceTo(cCandidate2)) ? cCandidate1 : cCandidate2;
         }
+    }
+
+    /**
+     * Returns the grid cell for the centroid of a given geometry
+     *
+     * @param g geometry
+     * @return corresponding grid cell
+     * @throws Exception
+     */
+    public GridCell cellForCentroid(Geometry g) throws Exception {
+        Coordinate c = g.getCentroid().getCoordinate();
+        return this.cellForLocation(c.x, c.y);
     }
 
     /**
