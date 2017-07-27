@@ -203,10 +203,10 @@ public class ISEA3H {
     }
 
     private Tuple<Integer, Integer> _integerForFaceCoordinates(FaceCoordinates c) {
-        int nx2 = (int)Math.round(c.getX() / this._l2);
-        int ny2 = (int)Math.round(c.getY() / this._inverseSqrt3l - ((nx2 % 2 == 0) ? 0 : .5));
-        int nx = (this._resolution % 2 == 0) ? nx2 : ny2;
-        int ny = (this._resolution % 2 == 0) ? ny2 : nx2;
+        double cx = (this._coordinatesNotSwapped()) ? c.getX() : c.getY();
+        double cy = (this._coordinatesNotSwapped()) ? c.getY() : c.getX();
+        int nx = (int)Math.round(cx / this._l2);
+        int ny = (int)Math.round(cy / this._inverseSqrt3l - ((nx % 2 == 0) ? 0 : .5));
         return new Tuple(nx, ny);
     }
 
