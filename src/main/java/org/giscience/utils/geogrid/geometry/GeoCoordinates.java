@@ -21,7 +21,7 @@ package org.giscience.utils.geogrid.geometry;
  *
  * @author Franz-Benjamin Mocnik
  */
-public class GeoCoordinates {
+public class GeoCoordinates implements Comparable<GeoCoordinates> {
     private final Double _lat;
     private final Double _lon;
 
@@ -45,5 +45,12 @@ public class GeoCoordinates {
     @Override
     public String toString() {
         return String.format("lat %f lon %f", this._lat, this._lon);
+    }
+
+    @Override
+    public int compareTo(GeoCoordinates o) {
+        int d = Double.compare(this._lat, o._lat);
+        if (d != 0) return d;
+        return Double.compare(this._lon, o._lon);
     }
 }
