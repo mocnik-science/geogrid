@@ -68,7 +68,7 @@ public class GridCell implements Comparable<GridCell> {
      * @return id of the cell
      */
     public Long getId() {
-        if (this._id != null) {
+        if (this._id == null) {
             long sgnLat = (this._lat < 0) ? 20 : 0;
             long sgnLon = (this._lon < 0) ? 40 : 0;
             this._id = (this._resolution.longValue() + sgnLat + sgnLon) * (long) 1e17 + Math.abs(Math.round(this._lat * 1e6)) * (long) 1e9 + Math.abs(Math.round(this._lon * 1e6));
