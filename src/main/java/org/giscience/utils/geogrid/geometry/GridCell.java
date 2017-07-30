@@ -25,6 +25,7 @@ public class GridCell implements Comparable<GridCell> {
     private final Integer _resolution;
     private final double _lat;
     private final double _lon;
+    private Long _id = null;
 
     public GridCell(int resolution, double lat, double lon) throws Exception {
         if (resolution < 0 || resolution > 18) throw new Exception("resolution must be between 0 and 18");
@@ -67,9 +68,12 @@ public class GridCell implements Comparable<GridCell> {
      * @return id of the cell
      */
     public Long getId() {
-        long sgnLat = (this._lat < 0) ? 20 : 0;
-        long sgnLon = (this._lon < 0) ? 40 : 0;
-        return (this._resolution.longValue() + sgnLat + sgnLon) * (long) 1e17 + Math.abs(Math.round(this._lat * 1e6)) * (long) 1e9 + Math.abs(Math.round(this._lon * 1e6));
+        if (this._id != null) {
+            long sgnLat = (this._lat < 0) ? 20 : 0;
+            long sgnLon = (this._lon < 0) ? 40 : 0;
+            this._id = (this._resolution.longValue() + sgnLat + sgnLon) * (long) 1e17 + Math.abs(Math.round(this._lat * 1e6)) * (long) 1e9 + Math.abs(Math.round(this._lon * 1e6));
+        }
+        return this._id;
     }
 
     public boolean equals(Object o) {
