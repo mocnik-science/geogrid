@@ -210,7 +210,7 @@ public class ISEA3H {
      */
     public Collection<GridCell> cellsForBound(double lat0, double lat1, double lon0, double lon1) throws Exception {
         Set<GridCell> cells = new HashSet<>();
-        for (int f = 1; f <= this._projection.numberOfFaces(); f++) cells.addAll(_cellsForBound(f, lat0, lat1, lon0, lon1));
+        for (int f = 1; f <= this._projection.numberOfFaces(); f++) cells.addAll(this._cellsForBound(f, lat0, lat1, lon0, lon1));
         return cells;
     }
 
