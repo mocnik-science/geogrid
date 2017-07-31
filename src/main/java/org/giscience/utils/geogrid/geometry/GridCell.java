@@ -26,9 +26,10 @@ public class GridCell implements Comparable<GridCell> {
     private final Integer _resolution;
     private final double _lat;
     private final double _lon;
+    private final boolean _isPentagon;
     private Long _id = null;
 
-    public GridCell(int resolution, double lat, double lon) throws Exception {
+    public GridCell(int resolution, double lat, double lon, boolean isPentagon) throws Exception {
         if (resolution < 0 || resolution > 18) throw new Exception("resolution must be between 0 and 18");
         this._resolution = resolution;
         if (lat < -90 || lat > 90) throw new Exception("invalid latitude");
@@ -37,10 +38,11 @@ public class GridCell implements Comparable<GridCell> {
         else if (lon < -180) lon += 360;
         this._lat = lat;
         this._lon = lon;
+        this._isPentagon = isPentagon;
     }
 
-    public GridCell(int resolution, GeoCoordinates c) throws Exception {
-        this(resolution, c.getLat(), c.getLon());
+    public GridCell(int resolution, GeoCoordinates c, boolean isPentagon) throws Exception {
+        this(resolution, c.getLat(), c.getLon(), isPentagon);
     }
 
     public Integer getResolution() {
@@ -55,9 +57,14 @@ public class GridCell implements Comparable<GridCell> {
         return this._lon;
     }
 
+    public Boolean isPentagon() {
+        return this._isPentagon;
+    }
+
     /**
      * Returns an id of the cell. The id consists of the following elements:
      * <ul>
+     *     <li>The leading sign is positive in case of a hexagon, and negative in case of a pentagon.</li>
      *     <li>This first two digits consist of the resolution incremented by 20 in case of negative latitude, by 40 in
      *         case of negative longitude, and by 60 in case of negative latitude and longitude.</li>
      *     <li>The consecutive digits consist of the latitude, with two pre-decimal and six decimal places.</li>
@@ -72,7 +79,7 @@ public class GridCell implements Comparable<GridCell> {
         if (this._id == null) {
             long sgnLat = (this._lat < 0) ? 20 : 0;
             long sgnLon = (this._lon < 0) ? 40 : 0;
-            this._id = (this._resolution.longValue() + sgnLat + sgnLon) * (long) 1e17 + Math.abs(Math.round(this._lat * 1e6)) * (long) 1e9 + Math.abs(Math.round(this._lon * 1e6));
+            this._id = (this._isPentagon ? -1 : 1) * ((this._resolution.longValue() + sgnLat + sgnLon) * (long) 1e17 + Math.abs(Math.round(this._lat * 1e6)) * (long) 1e9 + Math.abs(Math.round(this._lon * 1e6)));
         }
         return this._id;
     }

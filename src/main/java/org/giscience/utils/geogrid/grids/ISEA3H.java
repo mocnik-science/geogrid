@@ -45,20 +45,22 @@ import java.util.*;
  * @author Franz-Benjamin Mocnik
  */
 public class ISEA3H {
+    private final double _precision = 1e-9;
     private final ISEAProjection _projection = new ISEAProjection();
     private final int _resolution; // resolution - 1
     private final int _numberOfHexagonCells;
     private final int _numberOfPentagonCells = 12;
     private final double _l0; // length of the triangle base at resolution 0
+    private final double _l02; // l_0 / 2
+    private final double _inverseSqrt3l0; // 1 / \sqrt{3} * l_0
+    private final double _inverseSqrt3l02; // 1 / (2 \sqrt{3}) * l_0
     private final double _l; // length of the triangle base at the given resolution
     private final double _l2; // l / 2
-    private final double _l3; // l / 3
     private final double _l6; // l / 6
     private final double _l23; // l * 2 / 3
-    private final double _lsquare3; // l^2 / 3
-    private final double _inverseSqrt3 = 1 / Math.sqrt(3);
-    private final double _inverseSqrt3l;
-    private final double _inverseSqrt3l2;
+    private final double _inverseSqrt3 = 1 / Math.sqrt(3); // 1 / \sqrt{3}
+    private final double _inverseSqrt3l; // 1 / \sqrt{3} * l
+    private final double _inverseSqrt3l2; // 1 / (2 \sqrt{3}) * l
     private final double _triangleA; // l0 / 2 // half base
     private final double _triangleB; // 1/4 * (2 \sqrt{3} - 1) * l0 // distance center point to tip
     private final double _triangleC; // 1/4 * l0 // distance base to center point
@@ -73,12 +75,13 @@ public class ISEA3H {
         }
         this._numberOfHexagonCells = 20 * numberOfHexagonCells;
         this._l0 = this._projection.lengthOfTriangleBase();
+        this._l02 = this._l0 / 2.;
+        this._inverseSqrt3l0 = this._inverseSqrt3 * this._l0;
+        this._inverseSqrt3l02 = this._inverseSqrt3l0 / 2.;
         this._l = Math.pow(this._inverseSqrt3, this._resolution) * this._l0;
         this._l2 = this._l / 2.;
-        this._l3 = this._l / 3.;
         this._l6 = this._l / 6.;
         this._l23 = this._l * 2 / 3.;
-        this._lsquare3 = Math.pow(this._l, 2) / 3.;
         this._inverseSqrt3l = this._inverseSqrt3 * this._l;
         this._inverseSqrt3l2 = this._inverseSqrt3l / 2.;
         this._triangleA = this._l0 / 2.;
@@ -148,7 +151,8 @@ public class ISEA3H {
      * @throws Exception
      */
     public GridCell cellForLocation(GeoCoordinates c) throws Exception {
-        return new GridCell(this._resolution, this._projection.icosahedronToSphere(this.cellForLocation(this._projection.sphereToIcosahedron(c))));
+        FaceCoordinates fc = this.cellForLocation(this._projection.sphereToIcosahedron(c));
+        return this._newGridCell(this._projection.icosahedronToSphere(fc), fc);
     }
 
     /**
@@ -270,12 +274,17 @@ public class ISEA3H {
                 FaceCoordinates fc = this._getCoordinatesOfCenter(face, nx, ny);
                 if (this._isCoordinatesInFace(fc)) {
                     GeoCoordinates gc = this._projection.icosahedronToSphere(fc);
-                    if (lat0 - buffer2 <= gc.getLat() && gc.getLat() <= lat1 + buffer2 && lon0 - buffer2 <= gc.getLon() && gc.getLon() <= lon1 + buffer2) cells.add(new GridCell(this._resolution, gc));
+                    if (lat0 - buffer2 <= gc.getLat() && gc.getLat() <= lat1 + buffer2 && lon0 - buffer2 <= gc.getLon() && gc.getLon() <= lon1 + buffer2) cells.add(this._newGridCell(gc, fc));
                 }
             }
         }
 
         return cells;
+    }
+
+    private GridCell _newGridCell(GeoCoordinates gc, FaceCoordinates fc) throws Exception {
+        boolean isPentagon = (Math.abs(Math.abs(fc.getX()) - this._l02) < this._precision && Math.abs(fc.getY() - this._inverseSqrt3l02) < this._precision) || (Math.abs(fc.getX()) < this._precision && Math.abs(fc.getY() - this._inverseSqrt3l0) < this._precision);
+        return new GridCell(this._resolution, gc, isPentagon);
     }
 
     /**
