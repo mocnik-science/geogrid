@@ -279,6 +279,31 @@ public class ISEA3H {
     }
 
     /**
+     * Returns a buffer for a bounding box of geographic coordinates that needs to be considered in order to ensure
+     * that all grid cells, whose center point is within the given bounding box, are contained in the bounding box or
+     * the buffer
+     *
+     * @param lat0
+     * @param lat1
+     * @param lon0
+     * @param lon1
+     * @return buffer
+     * @throws Exception
+     */
+    public Double bufferEstimator(double lat0, double lat1, double lon0, double lon1) throws Exception {
+        FaceCoordinates southWest = this._projection.sphereToIcosahedron(new GeoCoordinates(lat0, lon0));
+        FaceCoordinates northEast = this._projection.sphereToIcosahedron(new GeoCoordinates(lat0, lon0));
+        GeoCoordinates southWest2 = this._projection.icosahedronToSphere(new FaceCoordinates(southWest.getFace(), southWest.getX() - this.diameterOfCellOnIcosahedron() / 2, southWest.getY() - this.diameterOfCellOnIcosahedron() / 2));
+        GeoCoordinates northEast2 = this._projection.icosahedronToSphere(new FaceCoordinates(northEast.getFace(), northEast.getX() - this.diameterOfCellOnIcosahedron() / 2, northEast.getY() - this.diameterOfCellOnIcosahedron() / 2));
+        List<Double> l = new ArrayList<>();
+        l.add(Math.abs(southWest2.getLat() - lat0));
+        l.add(Math.abs(southWest2.getLon() - lon0));
+        l.add(Math.abs(northEast2.getLat() - lat1));
+        l.add(Math.abs(northEast2.getLon() - lon1));
+        return l.stream().max(Double::compareTo).get();
+    }
+
+    /**
      * @param face face to compute the coordinates on
      * @param nx steps into the direction of the vertex of the hexagon
      * @param ny steps into the direction of the edge of the hexagon
