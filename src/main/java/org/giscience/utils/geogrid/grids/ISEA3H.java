@@ -226,6 +226,16 @@ public class ISEA3H {
         return this.cellForLocation(this._projection.sphereToPlanesOfTheFacesOfTheIcosahedron(face, c));
     }
 
+    private Double _bufferEstimator(int face, int nx, int ny) throws Exception {
+        GeoCoordinates x = this._projection.icosahedronToSphere(this._getCoordinatesOfCenter(face, nx, ny));
+        GeoCoordinates y0 = this._projection.icosahedronToSphere(this._getCoordinatesOfCenter(face, nx + 1, ny));
+        GeoCoordinates y1 = this._projection.icosahedronToSphere(this._getCoordinatesOfCenter(face, nx, ny + 1));
+        double d0 = Math.pow(x.getLat() - y0.getLat(), 2) + Math.pow(x.getLon() - y0.getLon(), 2);
+        double d1 = Math.pow(x.getLat() - y1.getLat(), 2) + Math.pow(x.getLon() - y1.getLon(), 2);
+        double d = (d0 > d1) ? Math.sqrt(d0) : Math.sqrt(d1);
+        return 2 * d;
+    }
+
     private Collection<GridCell> _cellsForBound(int face, double lat0, double lat1, double lon0, double lon1) throws Exception {
         Set<GridCell> cells = new HashSet<>();
 
@@ -254,11 +264,13 @@ public class ISEA3H {
         // compute cells
         Tuple<Integer, Integer> fcMinN = this._integerForFaceCoordinates(this.cellForLocation(new FaceCoordinates(face, xMin, yMin)));
         Tuple<Integer, Integer> fcMaxN = this._integerForFaceCoordinates(this.cellForLocation(new FaceCoordinates(face, xMax, yMax)));
+        Double buffer2 = this._bufferEstimator(face, Math.round((fcMaxN._1 - fcMinN._1 + 1) / 2), Math.round((fcMaxN._2 - fcMinN._2 + 1) / 2));
         for (int nx = fcMinN._1 - 1; nx <= fcMaxN._1 + 1; nx++) {
             for (int ny = fcMinN._2 - 1; ny <= fcMaxN._2 + 1; ny++) {
                 FaceCoordinates fc = this._getCoordinatesOfCenter(face, nx, ny);
                 if (this._isCoordinatesInFace(fc)) {
-                    cells.add(new GridCell(this._resolution, this._projection.icosahedronToSphere(fc)));
+                    GeoCoordinates gc = this._projection.icosahedronToSphere(fc);
+                    if (lat0 - buffer2 <= gc.getLat() && gc.getLat() <= lat1 + buffer2 && lon0 - buffer2 <= gc.getLon() && gc.getLon() <= lon1 + buffer2) cells.add(new GridCell(this._resolution, gc));
                 }
             }
         }
