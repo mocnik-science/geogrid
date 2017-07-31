@@ -22,6 +22,7 @@ package org.giscience.utils.geogrid.geometry;
  * @author Franz-Benjamin Mocnik
  */
 public class GridCell implements Comparable<GridCell> {
+    private final double _precision = 1e-9;
     private final Integer _resolution;
     private final double _lat;
     private final double _lon;
@@ -93,8 +94,8 @@ public class GridCell implements Comparable<GridCell> {
     public int compareTo(GridCell o) {
         int d = Integer.compare(this._resolution, o._resolution);
         if (d != 0) return d;
-        d = Double.compare(this._lat, o._lat);
+        d = (Math.abs(this._lat - o._lat) < this._precision) ? 0 : Double.compare(this._lat, o._lat);
         if (d != 0) return d;
-        return Double.compare(this._lon, o._lon);
+        return (Math.abs(this._lon - o._lon) < this._precision) ? 0 : Double.compare(this._lon, o._lon);
     }
 }
