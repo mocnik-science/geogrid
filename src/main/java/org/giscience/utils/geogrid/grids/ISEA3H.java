@@ -70,9 +70,7 @@ public class ISEA3H {
         this._projection.setOrientationSymmetricEquator();
         this._resolution = resolution - 1;
         int numberOfHexagonCells = 1;
-        for (int i = 0; i < this._resolution; i++) {
-            numberOfHexagonCells = 3 * numberOfHexagonCells + 1;
-        }
+        for (int i = 0; i < this._resolution; i++) numberOfHexagonCells = 3 * numberOfHexagonCells + 1;
         this._numberOfHexagonCells = 20 * numberOfHexagonCells;
         this._l0 = this._projection.lengthOfTriangleBase();
         this._l02 = this._l0 / 2.;
