@@ -277,8 +277,9 @@ public class ISEA3H {
     }
 
     private GridCell _newGridCell(GeoCoordinates gc, FaceCoordinates fc) throws Exception {
-        return new GridCell(this._resolution, gc, isPentagon);
-        boolean isPentagon = (Math.abs(Math.abs(fc.getX()) - this._triangleA) < this._precision && Math.abs(fc.getY() + this._triangleC) < this._precision) || (Math.abs(fc.getX()) < this._precision && Math.abs(fc.getY() - this._triangleB) < this._precision);
+        int d = this._faceOrientation(fc.getFace());
+        boolean isPentagon = (Math.abs(Math.abs(fc.getX()) - this._triangleA) < this._precision && Math.abs(fc.getY() + d * this._triangleC) < this._precision) || (Math.abs(fc.getX()) < this._precision && Math.abs(fc.getY() - d * this._triangleB) < this._precision);
+        return new GridCell(this._resolution, gc, isPentagon, fc.getFace());
     }
 
     /**
@@ -323,9 +324,7 @@ public class ISEA3H {
         double y = this._coordinatesNotSwapped() ? fc.getY() : fc.getX();
 
         // cell orientation
-        short d;
-        if (5 <= fc.getFace() || (11 <= fc.getFace() && fc.getFace() <= 15)) d = 1;
-        else d = -1;
+        int d = this._faceOrientation(fc.getFace());
 
         // test whether coordinate is left of the triangle, right of the triangle, or below the triangle
         if (x * this._triangleBCA + this._triangleB < d * y) return false;
@@ -341,5 +340,9 @@ public class ISEA3H {
 
     private boolean _coordinatesNotSwapped() {
         return this._resolution % 2 == 0;
+    }
+
+    private int _faceOrientation(int face) {
+        return (5 <= face || (11 <= face && face <= 15)) ? 1 : -1;
     }
 }
