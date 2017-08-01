@@ -51,9 +51,7 @@ public class ISEA3H {
     private final int _numberOfHexagonCells;
     private final int _numberOfPentagonCells = 12;
     private final double _l0; // length of the triangle base at resolution 0
-    private final double _l02; // l_0 / 2
     private final double _inverseSqrt3l0; // 1 / \sqrt{3} * l_0
-    private final double _inverseSqrt3l02; // 1 / (2 \sqrt{3}) * l_0
     private final double _l; // length of the triangle base at the given resolution
     private final double _l2; // l / 2
     private final double _l6; // l / 6
@@ -64,7 +62,7 @@ public class ISEA3H {
     private final double _triangleA; // l0 / 2 // half base
     private final double _triangleB; // 1/4 * (2 \sqrt{3} - 1) * l0 // distance center point to tip
     private final double _triangleC; // 1/4 * l0 // distance base to center point
-    private final double _triangleBC; // \sqrt{3} / 2 * l0 // height
+    private final double _triangleBCA; // (_triangleA + _triangleB) / _triangleC
 
     public ISEA3H(int resolution) {
         this._projection.setOrientationSymmetricEquator();
@@ -73,9 +71,7 @@ public class ISEA3H {
         for (int i = 0; i < this._resolution; i++) numberOfHexagonCells = 3 * numberOfHexagonCells + 1;
         this._numberOfHexagonCells = 20 * numberOfHexagonCells;
         this._l0 = this._projection.lengthOfTriangleBase();
-        this._l02 = this._l0 / 2.;
         this._inverseSqrt3l0 = this._inverseSqrt3 * this._l0;
-        this._inverseSqrt3l02 = this._inverseSqrt3l0 / 2.;
         this._l = Math.pow(this._inverseSqrt3, this._resolution) * this._l0;
         this._l2 = this._l / 2.;
         this._l6 = this._l / 6.;
@@ -83,9 +79,9 @@ public class ISEA3H {
         this._inverseSqrt3l = this._inverseSqrt3 * this._l;
         this._inverseSqrt3l2 = this._inverseSqrt3l / 2.;
         this._triangleA = this._l0 / 2.;
-        this._triangleB = 1 / 4. * (2 * Math.sqrt(3) - 1) * this._l0;
-        this._triangleC = 1 / 4. * this._l0;
-        this._triangleBC = Math.sqrt(3) / 2. * this._l0;
+        this._triangleB = this._inverseSqrt3 * this._l0;
+        this._triangleC = this._inverseSqrt3 / 2. * this._l0;
+        this._triangleBCA = (this._triangleA + this._triangleB) / this._triangleC;
     }
 
     /**
@@ -281,8 +277,8 @@ public class ISEA3H {
     }
 
     private GridCell _newGridCell(GeoCoordinates gc, FaceCoordinates fc) throws Exception {
-        boolean isPentagon = (Math.abs(Math.abs(fc.getX()) - this._l02) < this._precision && Math.abs(fc.getY() - this._inverseSqrt3l02) < this._precision) || (Math.abs(fc.getX()) < this._precision && Math.abs(fc.getY() - this._inverseSqrt3l0) < this._precision);
         return new GridCell(this._resolution, gc, isPentagon);
+        boolean isPentagon = (Math.abs(Math.abs(fc.getX()) - this._triangleA) < this._precision && Math.abs(fc.getY() + this._triangleC) < this._precision) || (Math.abs(fc.getX()) < this._precision && Math.abs(fc.getY() - this._triangleB) < this._precision);
     }
 
     /**
@@ -328,12 +324,12 @@ public class ISEA3H {
 
         // cell orientation
         short d;
-        if (fc.getFace() <= 5 || fc.getFace() >= 11 && fc.getFace() <= 15) d = 1;
+        if (5 <= fc.getFace() || (11 <= fc.getFace() && fc.getFace() <= 15)) d = 1;
         else d = -1;
 
         // test whether coordinate is left of the triangle, right of the triangle, or below the triangle
-        if (x * this._triangleBC / this._triangleA + this._triangleB < d * y) return false;
-        if (- x * this._triangleBC / this._triangleA + this._triangleB < d * y) return false;
+        if (x * this._triangleBCA + this._triangleB < d * y) return false;
+        if (- x * this._triangleBCA + this._triangleB < d * y) return false;
         if (d * y < - this._triangleC) return false;
 
         return true;
