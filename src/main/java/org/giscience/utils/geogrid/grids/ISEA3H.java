@@ -59,9 +59,9 @@ public class ISEA3H {
     private final double _inverseSqrt3 = 1 / Math.sqrt(3); // 1 / \sqrt{3}
     private final double _inverseSqrt3l; // 1 / \sqrt{3} * l
     private final double _inverseSqrt3l2; // 1 / (2 \sqrt{3}) * l
-    private final double _triangleA; // l0 / 2 // half base
-    private final double _triangleB; // 1/4 * (2 \sqrt{3} - 1) * l0 // distance center point to tip
-    private final double _triangleC; // 1/4 * l0 // distance base to center point
+    private final double _triangleA; // l_0 / 2 // half base
+    private final double _triangleB; // 1/\sqrt{3} * l_0 // distance center point to tip
+    private final double _triangleC; // 1/(2 \sqrt{3}) * l_0 // distance base to center point
     private final double _triangleBCA; // (_triangleA + _triangleB) / _triangleC
 
     public ISEA3H(int resolution) {
@@ -79,8 +79,8 @@ public class ISEA3H {
         this._inverseSqrt3l = this._inverseSqrt3 * this._l;
         this._inverseSqrt3l2 = this._inverseSqrt3l / 2.;
         this._triangleA = this._l0 / 2.;
-        this._triangleB = this._inverseSqrt3 * this._l0;
-        this._triangleC = this._inverseSqrt3 / 2. * this._l0;
+        this._triangleB = this._inverseSqrt3l0;
+        this._triangleC = this._inverseSqrt3l0 / 2.;
         this._triangleBCA = (this._triangleA + this._triangleB) / this._triangleC;
     }
 
@@ -208,7 +208,7 @@ public class ISEA3H {
      */
     public Collection<GridCell> cellsForBound(double lat0, double lat1, double lon0, double lon1) throws Exception {
         Set<GridCell> cells = new HashSet<>();
-        for (int f = 1; f <= this._projection.numberOfFaces(); f++) cells.addAll(this._cellsForBound(f, lat0, lat1, lon0, lon1));
+        for (int f = 0; f < this._projection.numberOfFaces(); f++) cells.addAll(this._cellsForBound(f, lat0, lat1, lon0, lon1));
         return cells;
     }
 
@@ -277,7 +277,7 @@ public class ISEA3H {
     }
 
     private GridCell _newGridCell(GeoCoordinates gc, FaceCoordinates fc) throws Exception {
-        int d = this._faceOrientation(fc.getFace());
+        int d = this._projection.faceOrientation(fc);
         boolean isPentagon = (Math.abs(Math.abs(fc.getX()) - this._triangleA) < this._precision && Math.abs(fc.getY() + d * this._triangleC) < this._precision) || (Math.abs(fc.getX()) < this._precision && Math.abs(fc.getY() - d * this._triangleB) < this._precision);
         return new GridCell(this._resolution, gc, isPentagon, fc.getFace());
     }
@@ -324,12 +324,12 @@ public class ISEA3H {
         double y = this._coordinatesNotSwapped() ? fc.getY() : fc.getX();
 
         // cell orientation
-        int d = this._faceOrientation(fc.getFace());
+        int d = this._projection.faceOrientation(fc);
 
         // test whether coordinate is left of the triangle, right of the triangle, or below the triangle
-        if (x * this._triangleBCA + this._triangleB < d * y) return false;
-        if (- x * this._triangleBCA + this._triangleB < d * y) return false;
-        if (d * y < - this._triangleC) return false;
+        if (d * y > x * this._triangleBCA + this._triangleB) return false;
+        if (d * y > -x * this._triangleBCA + this._triangleB) return false;
+        if (d * y < -this._triangleC) return false;
 
         return true;
     }
@@ -340,9 +340,5 @@ public class ISEA3H {
 
     private boolean _coordinatesNotSwapped() {
         return this._resolution % 2 == 0;
-    }
-
-    private int _faceOrientation(int face) {
-        return (5 <= face || (11 <= face && face <= 15)) ? 1 : -1;
     }
 }

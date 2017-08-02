@@ -68,14 +68,14 @@ public class ISEAProjection {
     // tmp
     private final double _2R = 2 * this._R; // 2 R'
     private final double __EF = this.__E - this.__F; // E - F
-    private final int _AzMax = 2 * (90 - this._theta);
+    private final int _AzMax = 2 * (90 - this._theta); // 2 (90 - \theta)
     private final double _tan_g = Trigonometric.tan(this._g); // \tan g
-    private final double _R_tan_g_2 = Math.pow(this._R * this._tan_g, 2); // R'^2 * \tan^2 g
     private final double _cosG = Trigonometric.cos(this._G); // \cos G
     private final double _cotTheta = Trigonometric.cot(this._theta); // \cot \theta
     private final double _2cotTheta = 2 * this._cotTheta; // 2 \cot \theta
     private final double _pi_R_earth2_180 = Math.PI * Math.pow(this._R_earth, 2) / 180; // \pi R^2 / 180
     private final double _R_tan_g = this._R * this._tan_g; // R' \tan g
+    private final double _R_tan_g_2 = Math.pow(this._R_tan_g, 2); // R'^2 * \tan^2 g
     private final double _sinG_cos_g = Trigonometric.sin(this._G) * Trigonometric.cos(this._g); // \sin G \cos g
     private final double _G_180 = this._G - 180; // G - 180
 
@@ -260,7 +260,8 @@ public class ISEAProjection {
 
     private FaceCoordinates sphereToFace(GeoCoordinates c, Face face) {
         double Az_earth = Trigonometric.atan2(face.cosLat() * face.sinLonLon0(), face.cosLat0() * face.sinLat() - face.sinLat0() * face.cosLat() * face.cosLonLon0()); // Az
-        double AzAdjustment = 0;
+        double AzAdjustment = (this.faceOrientation(face.getFace()) > 0) ? 0 : 180;
+        Az_earth += AzAdjustment;
         while (Az_earth < 0) {
             AzAdjustment += this._AzMax;
             Az_earth += this._AzMax;
@@ -277,9 +278,10 @@ public class ISEAProjection {
         double sinAz = Trigonometric.sin(Az); // \sin Az'
         double cosAz = Trigonometric.cos(Az); // \cos Az'
         double f = this._compute_f(sinAz, cosAz, sinAz_earth, cosAz_earth); // f
-        double rho = this._2R * f * Trigonometric.sin(face.z() / 2); // \rho
-        double x = rho * Trigonometric.sin(Az - AzAdjustment); // x
-        double y = rho * Trigonometric.cos(Az - AzAdjustment); // y
+        double rho = this._2R * f * Trigonometric.sin(face.z() / 2.); // \rho
+        Az -= AzAdjustment;
+        double x = rho * Trigonometric.sin(Az); // x
+        double y = rho * Trigonometric.cos(Az); // y
         return new FaceCoordinates(face.getFace(), x, y);
     }
 
@@ -295,36 +297,37 @@ public class ISEAProjection {
 
     private Face _sphereToFace(GeoCoordinates c) {
         if (c.getLat() > this.__EF) {
-            if (c.getLon() < -108) return new Face(1, this, c);
-            else if (c.getLon() < -36) return new Face(2, this, c);
-            else if (c.getLon() < 36) return new Face(3, this, c);
-            else if (c.getLon() < 108) return new Face(4, this, c);
-            else return new Face(5, this, c);
+            if (c.getLon() < -108) return new Face(0, this, c);
+            else if (c.getLon() < -36) return new Face(1, this, c);
+            else if (c.getLon() < 36) return new Face(2, this, c);
+            else if (c.getLon() < 108) return new Face(3, this, c);
+            else return new Face(4, this, c);
         } else if (c.getLat() < -this.__EF) {
-            if (c.getLon() < -144) return new Face(20, this, c);
-            else if (c.getLon() < -72) return new Face(16, this, c);
-            else if (c.getLon() < 0) return new Face(17, this, c);
-            else if (c.getLon() < 72) return new Face(18, this, c);
-            else if (c.getLon() < 144) return new Face(19, this, c);
-            else return new Face(20, this, c);
+            if (c.getLon() < -144) return new Face(19, this, c);
+            else if (c.getLon() < -72) return new Face(15, this, c);
+            else if (c.getLon() < 0) return new Face(16, this, c);
+            else if (c.getLon() < 72) return new Face(17, this, c);
+            else if (c.getLon() < 144) return new Face(18, this, c);
+            else return new Face(19, this, c);
         } else {
-            if (c.getLon() < -144) return this._sphereToFaceTestFaces(c, 6, 15);
-            else if (c.getLon() < -108) return this._sphereToFaceTestFaces(c, 6, 11);
-            else if (c.getLon() < -72) return this._sphereToFaceTestFaces(c, 7, 11);
-            else if (c.getLon() < -36) return this._sphereToFaceTestFaces(c, 7, 12);
-            else if (c.getLon() < 0) return this._sphereToFaceTestFaces(c, 8, 12);
-            else if (c.getLon() < 36) return this._sphereToFaceTestFaces(c, 8, 13);
-            else if (c.getLon() < 72) return this._sphereToFaceTestFaces(c, 9, 13);
-            else if (c.getLon() < 108) return this._sphereToFaceTestFaces(c, 9, 14);
-            else if (c.getLon() < 144) return this._sphereToFaceTestFaces(c, 10, 14);
-            return this._sphereToFaceTestFaces(c, 10, 15);
+            if (c.getLon() < -144) return this._sphereToFaceTestFaces(c, 5, 14);
+            else if (c.getLon() < -108) return this._sphereToFaceTestFaces(c, 5, 10);
+            else if (c.getLon() < -72) return this._sphereToFaceTestFaces(c, 6, 10);
+            else if (c.getLon() < -36) return this._sphereToFaceTestFaces(c, 6, 11);
+            else if (c.getLon() < 0) return this._sphereToFaceTestFaces(c, 7, 11);
+            else if (c.getLon() < 36) return this._sphereToFaceTestFaces(c, 7, 12);
+            else if (c.getLon() < 72) return this._sphereToFaceTestFaces(c, 8, 12);
+            else if (c.getLon() < 108) return this._sphereToFaceTestFaces(c, 8, 13);
+            else if (c.getLon() < 144) return this._sphereToFaceTestFaces(c, 9, 13);
+            return this._sphereToFaceTestFaces(c, 9, 14);
         }
     }
 
     private GeoCoordinates _faceToSphere(FaceCoordinates c) throws Exception {
         double Az = Trigonometric.atan2(c.getX(), c.getY()); // Az'
         double rho = Math.sqrt(Math.pow(c.getX(), 2) + Math.pow(c.getY(), 2)); // \rho
-        double AzAdjustment = 0;
+        double AzAdjustment = (this.faceOrientation(c) > 0) ? 0 : 180;
+        Az += AzAdjustment;
         while (Az < 0) {
             AzAdjustment += this._AzMax;
             Az += this._AzMax;
@@ -376,6 +379,20 @@ public class ISEAProjection {
         return (f1.z() <= f2.z()) ? f1 : f2;
     }
 
+    /**
+     * Returns orientation of a face.
+     *
+     * @param fc
+     * @return 1 for upright, and -1 for upside down
+     */
+    public int faceOrientation(FaceCoordinates fc) {
+        return this.faceOrientation(fc.getFace());
+    }
+
+    private int faceOrientation(int face) {
+        return (face <= 4 || (10 <= face && face <= 14)) ? 1 : -1;
+    }
+
     private double _compute_H(double sinAz_earth, double cosAz_earth) {
         return Trigonometric.acos(sinAz_earth * this._sinG_cos_g - cosAz_earth * this._cosG); // H
     }
@@ -386,7 +403,7 @@ public class ISEAProjection {
         return this._R_tan_g / (cosAz + sinAz * this._cotTheta); // d'
     }
     private double _compute_q(double sinAz_earth, double cosAz_earth) {
-        return Trigonometric.atan(this._tan_g / (cosAz_earth + sinAz_earth * this._cotTheta)); // q
+        return Trigonometric.atan2(this._tan_g, (cosAz_earth + sinAz_earth * this._cotTheta)); // q
     }
 
     private double _getLat(Face f) {
@@ -402,10 +419,10 @@ public class ISEAProjection {
         return this._getLon(c.getFace());
     }
     private double _getLat(int f) {
-        return this.__lats[f - 1];
+        return this.__lats[f];
     }
     private double _getLon(int f) {
-        return this.__lons[f - 1];
+        return this.__lons[f];
     }
 
     private class Face {
