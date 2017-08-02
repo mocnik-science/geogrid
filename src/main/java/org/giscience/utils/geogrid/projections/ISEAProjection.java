@@ -42,7 +42,8 @@ import org.giscience.utils.geogrid.generic.Trigonometric;
  */
 public class ISEAProjection {
     // radius
-    private final double _R = .9449322893 * this._R_earth; // R'
+    private final double _RR_earth = Math.sqrt((this._G - this._theta) * Math.PI / (90 * Trigonometric.sin(this._theta) * Trigonometric.cos(this._theta))) / Trigonometric.tan(this._g); // R' / R
+    private final double _R = this._RR_earth * this._R_earth; // R'
     private final double _R_earth = WGS84.radiusAuthalic; // R // authalic sphere radius for WGS84 [km]
     // faces
     private final int _numberOfFaces = 20;
