@@ -62,7 +62,7 @@ public class ISEA3H {
     private final double _triangleA; // l_0 / 2 // half base
     private final double _triangleB; // 1/\sqrt{3} * l_0 // distance center point to tip
     private final double _triangleC; // 1/(2 \sqrt{3}) * l_0 // distance base to center point
-    private final double _triangleBCA; // (_triangleA + _triangleB) / _triangleC
+    private final double _triangleBCA; // (_triangleB + _triangleC) / _triangleA
 
     public ISEA3H(int resolution) {
         this._projection.setOrientationSymmetricEquator();
@@ -81,7 +81,7 @@ public class ISEA3H {
         this._triangleA = this._l0 / 2.;
         this._triangleB = this._inverseSqrt3l0;
         this._triangleC = this._inverseSqrt3l0 / 2.;
-        this._triangleBCA = (this._triangleA + this._triangleB) / this._triangleC;
+        this._triangleBCA = (this._triangleB + this._triangleC) / this._triangleA;
     }
 
     /**
