@@ -389,7 +389,13 @@ public class ISEAProjection {
         return this.faceOrientation(fc.getFace());
     }
 
-    private int faceOrientation(int face) {
+    /**
+     * Returns orientation of a face.
+     *
+     * @param face
+     * @return 1 for upright, and -1 for upside down
+     */
+    public int faceOrientation(int face) {
         return (face <= 4 || (10 <= face && face <= 14)) ? 1 : -1;
     }
 

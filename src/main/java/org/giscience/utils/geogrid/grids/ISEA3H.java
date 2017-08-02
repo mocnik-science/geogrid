@@ -208,6 +208,24 @@ public class ISEA3H {
      */
     public Collection<GridCell> cellsForBound(double lat0, double lat1, double lon0, double lon1) throws Exception {
         Set<GridCell> cells = new HashSet<>();
+        if (lon1 - lon0 >= 360) {
+            lon0 = -180;
+            lon1 = 180;
+            cells.addAll(this._cellsForBound(lat0, lat1, lon0, lon1));
+        }
+        else if (lon1 % 360 < lon0 % 360) {
+            cells.addAll(this._cellsForBound(lat0, lat1, -180, lon0 % 360));
+            cells.addAll(this._cellsForBound(lat0, lat1, lon1 % 360, 180));
+        } else {
+            lon0 %= 360;
+            lon1 %= 360;
+            cells.addAll(this._cellsForBound(lat0, lat1, lon0, lon1));
+        }
+        return cells;
+    }
+
+    public Collection<GridCell> _cellsForBound(double lat0, double lat1, double lon0, double lon1) throws Exception {
+        Set<GridCell> cells = new HashSet<>();
         for (int f = 0; f < this._projection.numberOfFaces(); f++) cells.addAll(this._cellsForBound(f, lat0, lat1, lon0, lon1));
         return cells;
     }
@@ -238,10 +256,9 @@ public class ISEA3H {
         Set<GridCell> cells = new HashSet<>();
 
         // bounding box of face (triangle)
-        double size1 = this._l0 / 3.;
-        double size2 = this._l0 * this._inverseSqrt3 / 2.;
-        double sizeX = this._coordinatesNotSwapped() ? size1 : size2;
-        double sizeY = this._coordinatesNotSwapped() ? size2 : size1;
+        double sizeX = this._triangleA;
+        double sizeYMin = (this._projection.faceOrientation(face) > 0) ? this._triangleC : this._triangleB;
+        double sizeYMax = (this._projection.faceOrientation(face) > 0) ? this._triangleB : this._triangleC;
 
         // coordinates for vertices of bbox
         FaceCoordinates fc1 = this._cellCoordinatesForLocationAndFace(face, new GeoCoordinates(lat0, lon0));
@@ -250,19 +267,25 @@ public class ISEA3H {
         FaceCoordinates fc4 = this._cellCoordinatesForLocationAndFace(face, new GeoCoordinates(lat1, lon1));
 
         // find minimum and maximum values
-        double xMin = Math.min(fc1.getX(), Math.min(fc2.getX(), Math.min(fc3.getX(), fc4.getX())));
+        double xMin, xMax;
         double yMin = Math.min(fc1.getY(), Math.min(fc2.getY(), Math.min(fc3.getY(), fc4.getY())));
-        double xMax = Math.max(fc1.getX(), Math.max(fc2.getX(), Math.max(fc3.getX(), fc4.getX())));
         double yMax = Math.max(fc1.getY(), Math.max(fc2.getY(), Math.max(fc3.getY(), fc4.getY())));
+        if (lon1 - lon0 >= 360) {
+            xMin = -sizeX;
+            xMax = sizeX;
+        } else {
+            xMin = Math.min(fc1.getX(), Math.min(fc2.getX(), Math.min(fc3.getX(), fc4.getX())));
+            xMax = Math.max(fc1.getX(), Math.max(fc2.getX(), Math.max(fc3.getX(), fc4.getX())));
+        }
 
         // check whether bbox intersects face
         double buffer = this._l;
-        if (xMin - buffer > sizeX || xMax + buffer < -sizeX || yMin - buffer > sizeY || yMax + buffer < -sizeY) return cells;
+        if (xMin - buffer > sizeX || xMax + buffer < -sizeX  || yMin - buffer > sizeYMax || yMax + buffer < -sizeYMin) return cells;
 
         // compute cells
         Tuple<Integer, Integer> fcMinN = this._integerForFaceCoordinates(this.cellForLocation(new FaceCoordinates(face, xMin, yMin)));
         Tuple<Integer, Integer> fcMaxN = this._integerForFaceCoordinates(this.cellForLocation(new FaceCoordinates(face, xMax, yMax)));
-        Double buffer2 = this._bufferEstimator(face, Math.round((fcMaxN._1 - fcMinN._1 + 1) / 2), Math.round((fcMaxN._2 - fcMinN._2 + 1) / 2));
+        Double buffer2 = this._bufferEstimator(face, Math.round((fcMaxN._1 - fcMinN._1) / 2), Math.round((fcMaxN._2 - fcMinN._2) / 2));
         for (int nx = fcMinN._1 - 1; nx <= fcMaxN._1 + 1; nx++) {
             for (int ny = fcMinN._2 - 1; ny <= fcMaxN._2 + 1; ny++) {
                 FaceCoordinates fc = this._getCoordinatesOfCenter(face, nx, ny);
@@ -320,11 +343,9 @@ public class ISEA3H {
     }
 
     private boolean _isCoordinatesInFace(FaceCoordinates fc) {
-        double x = this._coordinatesNotSwapped() ? fc.getX() : fc.getY();
-        double y = this._coordinatesNotSwapped() ? fc.getY() : fc.getX();
-
-        // cell orientation
         int d = this._projection.faceOrientation(fc);
+        double x = fc.getX();
+        double y = fc.getY();
 
         // test whether coordinate is left of the triangle, right of the triangle, or below the triangle
         if (d * y > x * this._triangleBCA + this._triangleB) return false;
