@@ -209,17 +209,19 @@ public class ISEA3H {
     public Collection<GridCell> cellsForBound(double lat0, double lat1, double lon0, double lon1) throws Exception {
         Set<GridCell> cells = new HashSet<>();
         if (lon1 - lon0 >= 360) {
-            lon0 = -180;
-            lon1 = 180;
-            cells.addAll(this._cellsForBound(lat0, lat1, lon0, lon1));
-        } else if (lon1 % 360 < lon0 % 360) {
-            cells.addAll(this._cellsForBound(lat0, lat1, -180, lon0 % 360));
-            cells.addAll(this._cellsForBound(lat0, lat1, lon1 % 360, 180));
-        } else {
-            lon0 %= 360;
-            lon1 %= 360;
-            cells.addAll(this._cellsForBound(lat0, lat1, lon0, lon1));
+            cells.addAll(this._cellsForBound(lat0, lat1, -180, 180));
+            return cells;
         }
+        lon0 %= 360;
+        lon1 %= 360;
+        lon0 -= 360;
+        lon1 -= 360;
+        while (lon0 < -180) lon0 += 360;
+        while (lon1 < -180) lon1 += 360;
+        if (lon1 < lon0) {
+            cells.addAll(this._cellsForBound(lat0, lat1, -180, lon1));
+            cells.addAll(this._cellsForBound(lat0, lat1, lon0, 180));
+        } else cells.addAll(this._cellsForBound(lat0, lat1, lon0, lon1));
         return cells;
     }
 
@@ -266,15 +268,13 @@ public class ISEA3H {
         FaceCoordinates fc4 = this._cellCoordinatesForLocationAndFace(face, new GeoCoordinates(lat1, lon1));
 
         // find minimum and maximum values
-        double xMin, xMax;
-        double yMin = Math.min(fc1.getY(), Math.min(fc2.getY(), Math.min(fc3.getY(), fc4.getY())));
-        double yMax = Math.max(fc1.getY(), Math.max(fc2.getY(), Math.max(fc3.getY(), fc4.getY())));
-        if (lon1 - lon0 >= 360) {
-            xMin = -sizeX;
-            xMax = sizeX;
-        } else {
-            xMin = Math.min(fc1.getX(), Math.min(fc2.getX(), Math.min(fc3.getX(), fc4.getX())));
-            xMax = Math.max(fc1.getX(), Math.max(fc2.getX(), Math.max(fc3.getX(), fc4.getX())));
+        double xMin = -sizeX;
+        double xMax = sizeX;
+        double yMin = Math.max(-sizeYMin, Math.min(fc1.getY(), Math.min(fc2.getY(), Math.min(fc3.getY(), fc4.getY()))));
+        double yMax = Math.min(sizeYMax, Math.max(fc1.getY(), Math.max(fc2.getY(), Math.max(fc3.getY(), fc4.getY()))));
+        if (lon1 - lon0 < 360) {
+            xMin = Math.max(xMin, Math.min(fc1.getX(), Math.min(fc2.getX(), Math.min(fc3.getX(), fc4.getX()))));
+            xMax = Math.min(xMax, Math.max(fc1.getX(), Math.max(fc2.getX(), Math.max(fc3.getX(), fc4.getX()))));
         }
 
         // check whether bbox intersects face
