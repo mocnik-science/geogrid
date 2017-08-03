@@ -66,7 +66,8 @@ public class GridCell implements Comparable<GridCell> {
      * <ul>
      *     <li>The leading sign is positive in case of a hexagon, and negative in case of a pentagon.</li>
      *     <li>This first two digits consist of the resolution incremented by 20 in case of negative latitude, by 40 in
-     *         case of negative longitude, and by 60 in case of negative latitude and longitude.</li>
+     *         case of negative longitude, and by 60 in case of negative latitude and longitude. In case that the
+     *         latitude or the longitude is strictly less than .5e-6, it is always regarded as being positive.</li>
      *     <li>The consecutive digits consist of the latitude, with two pre-decimal and six decimal places.</li>
      *     <li>The consecutive digits consist of the longitude, with three pre-decimal and six decimal places.</li>
      * </ul>
@@ -77,8 +78,8 @@ public class GridCell implements Comparable<GridCell> {
      */
     public Long getId() {
         if (this._id == null) {
-            long sgnLat = (this._lat < 0) ? 20 : 0;
-            long sgnLon = (this._lon < 0) ? 40 : 0;
+            long sgnLat = (this._lat < 0 && Math.abs(this._lat) >= .5e-6) ? 22 : 0;
+            long sgnLon = (this._lon < 0 && Math.abs(this._lon) >= .5e-6) ? 44 : 0;
             this._id = (this._isPentagon ? -1 : 1) * ((this._resolution.longValue() + sgnLat + sgnLon) * (long) 1e17 + Math.abs(Math.round(this._lat * 1e6)) * (long) 1e9 + Math.abs(Math.round(this._lon * 1e6)));
         }
         return this._id;
