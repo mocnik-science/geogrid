@@ -61,7 +61,7 @@ public class ISEAProjection {
     // face constants
     private final double __E = 90 - this._g; // E
     private final double __F = 10.81231696; // F
-    private final double __G = this._R_earth * Trigonometric.tan(this._g) * Math.sqrt(3) / 2.; // G
+    private final double __G = this._R * Trigonometric.tan(this._g) * Math.sqrt(3) / 2.; // G // this value incorporates R', and not R, as is stated wrongly in the paper by Snyder
     private final double[] __lats = new double[20];
     private final int[] __lons = new int[20];
     // precision
