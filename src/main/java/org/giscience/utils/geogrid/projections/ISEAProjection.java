@@ -70,7 +70,7 @@ public class ISEAProjection {
     private final int[] __lons = new int[20];
     // precision
     private final double _precision = 1e-9;
-    // tmp
+    // computed values
     private final double _2R = 2 * this._R; // 2 R'
     private final double __EF = this.__E - this.__F; // E - F
     private final int _AzMax = 2 * (90 - this._theta); // 2 (90 - \theta)
