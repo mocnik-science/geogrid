@@ -212,8 +212,7 @@ public class ISEA3H {
             lon0 = -180;
             lon1 = 180;
             cells.addAll(this._cellsForBound(lat0, lat1, lon0, lon1));
-        }
-        else if (lon1 % 360 < lon0 % 360) {
+        } else if (lon1 % 360 < lon0 % 360) {
             cells.addAll(this._cellsForBound(lat0, lat1, -180, lon0 % 360));
             cells.addAll(this._cellsForBound(lat0, lat1, lon1 % 360, 180));
         } else {
