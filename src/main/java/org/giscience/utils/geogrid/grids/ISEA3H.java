@@ -348,9 +348,9 @@ public class ISEA3H {
         double y = fc.getY();
 
         // test whether coordinate is left of the triangle, right of the triangle, or below the triangle
-        if (d * y > x * this._triangleBCA + this._triangleB) return false;
-        if (d * y > -x * this._triangleBCA + this._triangleB) return false;
-        if (d * y < -this._triangleC) return false;
+        if (d * y > x * this._triangleBCA + this._triangleB + this._precision) return false;
+        if (d * y > -x * this._triangleBCA + this._triangleB + this._precision) return false;
+        if (d * y < -this._triangleC - this._precision) return false;
 
         return true;
     }
