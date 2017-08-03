@@ -38,6 +38,10 @@ import org.giscience.utils.geogrid.generic.Trigonometric;
  * Erika Harrison, Ali Mahdavi-Amiri, and Faramarz Samavati: Optimization of inverse Snyder polyhedral projection.
  * International Conference on Cyberworlds 2011. doi:10.1109/CW.2011.36
  *
+ * Erika Harrison, Ali Mahdavi-Amiri, and Faramarz Samavati: Analysis of inverse Snyder optimizations.
+ * In: Marina L. Gavrilova, and C. J. Kenneth Tan (Eds): Transactions on Computational Science XVI. Heidelberg,
+ * Springer, 2012. pp. 134–148. doi:10.1007/978-3-642-32663-9_8
+ *
  * @author Franz-Benjamin Mocnik
  */
 public class ISEAProjection {
