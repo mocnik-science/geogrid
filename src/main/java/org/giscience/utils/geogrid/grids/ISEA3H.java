@@ -336,6 +336,7 @@ public class ISEA3H {
      * @return coordinates on the face
      */
     private FaceCoordinates _getCoordinatesOfCenter(int face, int nx, int ny) {
+//        System.out.println("l2 " + this._l2 + " inverseSqrt3l " + this._inverseSqrt3l + " nx " + nx + " ny " + ny);
         double x = nx * this._l2;
         double y = (ny + ((nx % 2 == 0) ? 0 : .5)) * this._inverseSqrt3l;
         return this._faceCoordinatesSwapByResolution(face, x, y);

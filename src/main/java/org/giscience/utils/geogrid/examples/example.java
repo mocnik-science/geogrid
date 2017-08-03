@@ -128,8 +128,8 @@ erdoberfläche: 510,100,000 km^2
 -> radius: 6371.2218793249 km
 -> umfang: 40031.5677009551 km
 
-TODO
+Documentation
 
-* get grid cells for a given bbox
+* result: only between -180 and 180 lon
 
 */
