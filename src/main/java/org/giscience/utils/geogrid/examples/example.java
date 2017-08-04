@@ -17,8 +17,10 @@
 package org.giscience.utils.geogrid.examples;
 
 import org.giscience.utils.geogrid.geometry.FaceCoordinates;
+import org.giscience.utils.geogrid.geometry.GeoCoordinates;
 import org.giscience.utils.geogrid.geometry.GridCell;
 import org.giscience.utils.geogrid.grids.ISEA3H;
+import org.giscience.utils.geogrid.projections.ISEAProjection;
 
 import java.util.Collection;
 
@@ -26,73 +28,47 @@ import java.util.Collection;
  *
  * @author Franz-Benjamin Mocnik
  */
-public class example {
+public class Example {
     public static void main(String[] args) throws Exception {
 
-        ISEA3H grid3 = new ISEA3H(11);
-        Collection<GridCell> cells = grid3.cellsForBound(42, 43, 7, 8);
-        System.out.println(cells.size());
-        for (GridCell c : cells) System.out.println(c);
-        System.out.println("==.==.==");
-        for (GridCell c : cells) System.out.format("{lat: %f, lon: %f},", c.getLat(), c.getLon());
-
-
-
-
-        /*
-
-        ISEA3H grid2 = new ISEA3H(1);
-        System.out.println(grid2.numberOfHexagonCells() + grid2.numberOfPentagonCells());
-        System.out.println(grid2.areaOfHexagonCell());
-        System.out.println(grid2.numberOfHexagonCells() * grid2.areaOfHexagonCell() + grid2.numberOfPentagonCells() * grid2.areaOfPentagonCell() - WGS84.areaOfEarth);
-
-
-
-
+        // PROJECTION
         ISEAProjection p = new ISEAProjection();
-        p.setOrientationSymmetricEquator();
-        int iMax = 1; //000000;
-        long start = System.currentTimeMillis();
-        for (int i = 0; i < iMax; i++) {
-            GeoCoordinates c = new GeoCoordinates(Math.random() * 170 - 85, Math.random() * 360);
+
+        // project coordinates from the sphere to the icosahedron and back
+        for (int i = 0; i < 10; i++) {
+            GeoCoordinates c = new GeoCoordinates(Math.random() * 180 - 90, Math.random() * 360);
             FaceCoordinates c2 = p.sphereToIcosahedron(c);
             GeoCoordinates c3 = p.icosahedronToSphere(c2);
+            System.out.println(c);
+            System.out.println(c2);
+            System.out.println(c3);
+            System.out.println("------");
         }
-        long end = System.currentTimeMillis();
-        System.out.format("%f sec%n", (end - start) / 1000.);
 
+        // GRID
+        ISEA3H g = new ISEA3H(14);
 
-        double lat = Math.random() * 180 - 90;
-        double lon = Math.random() * 360;
-        System.out.println(new GridCell(12, lat, lon));
+        // print properties of the grid
+        System.out.format("number of hexagon cells: %d%n", g.numberOfHexagonCells());
+        System.out.format("number of pentagon cells: %d%n", g.numberOfPentagonCells());
+        System.out.format("diameter of a hexagon cell: %f%n", g.diameterOfHexagonCellOnIcosahedron());
+        System.out.format("area of a hexagon cell: %f%n", g.areaOfHexagonCell());
+        System.out.println("------");
 
-        double l = 1;
-        double inverseSqrt3 = 1 / Math.sqrt(3);
+        // get cells in given bounds
+        Collection<GridCell> cells = g.cellsForBound(41, 43, 6, 8);
+        System.out.println(cells.size());
+        System.out.println("------");
 
-        ISEA3H grid = new ISEA3H(1);
-
-
-//        System.out.println(grid.cellForLocation(new FaceCoordinates(1, 0., 0.)));
-        example.testGrid(grid, new FaceCoordinates(1, 0., inverseSqrt3 / 2 - .01));
-        example.testGrid(grid, new FaceCoordinates(1, 1.802799, 35.548452));
-//        System.out.println(grid.cellForLocation(new FaceCoordinates(1, 1 / 2.9, 0.)));
-
-        System.out.println(grid.diameterOfCellOnIcosahedron());
-
-        for (int i = 0; i < 0; i++) {
-            FaceCoordinates c = new FaceCoordinates(1, Math.random() * 100 - 50, Math.random() * 100 - 50);
-            double d = c.distanceTo(grid.cellForLocation(c));
-            System.out.println(d <= grid.diameterOfCellOnIcosahedron() / 2.);
+        // determine cell for geographic coordinates
+        for (int i = 0; i < 10; i++) {
+            GridCell c = g.cellForLocation(Math.random() * 180 - 90, Math.random() * 360);
+            System.out.println(c);
+            System.out.println("------");
         }
-*/
+        // alternatively, cellForLocation accepts a GeoCoordinates object
+        // the method cellForCentroid can be used to compute the grid cell for a jts Geometry
     }
-
-    public static void testGrid(ISEA3H grid, FaceCoordinates c) throws Exception {
-        System.out.println("======");
-        System.out.println(c);
-        System.out.println(grid.cellForLocation(c));
-    }
-
 }
 
 
