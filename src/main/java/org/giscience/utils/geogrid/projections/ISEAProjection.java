@@ -66,6 +66,7 @@ public class ISEAProjection {
     private final double __E = 90 - this._g; // E
     private final double __F = 10.81231696; // F
     private final double __G = this._R * Trigonometric.tan(this._g) * Math.sqrt(3) / 2.; // G // this value incorporates R', and not R, as is stated wrongly in the paper by Snyder
+    private final int __X = 36; // half the difference in latitude between two horizontally adjacent faces
     private final double[] __lats = new double[20];
     private final int[] __lons = new int[20];
     // precision
@@ -105,26 +106,26 @@ public class ISEAProjection {
         this.__lats[17] = -this.__E;
         this.__lats[18] = -this.__E;
         this.__lats[19] = -this.__E;
-        this.__lons[0] = -144;
-        this.__lons[1] = -72;
+        this.__lons[0] = -4 * this.__X;
+        this.__lons[1] = -2 * this.__X;
         this.__lons[2] = 0;
-        this.__lons[3] = 72;
-        this.__lons[4] = 144;
-        this.__lons[5] = -144;
-        this.__lons[6] = -72;
+        this.__lons[3] = 2 * this.__X;
+        this.__lons[4] = 4 * this.__X;
+        this.__lons[5] = -4 * this.__X;
+        this.__lons[6] = -2 * this.__X;
         this.__lons[7] = 0;
-        this.__lons[8] = 72;
-        this.__lons[9] = 144;
-        this.__lons[10] = -108;
-        this.__lons[11] = -36;
-        this.__lons[12] = 36;
-        this.__lons[13] = 108;
-        this.__lons[14] = 180;
-        this.__lons[15] = -108;
-        this.__lons[16] = -36;
-        this.__lons[17] = 36;
-        this.__lons[18] = 108;
-        this.__lons[19] = 180;
+        this.__lons[8] = 2 * this.__X;
+        this.__lons[9] = 4 * this.__X;
+        this.__lons[10] = -3 * this.__X;
+        this.__lons[11] = -this.__X;
+        this.__lons[12] = this.__X;
+        this.__lons[13] = 3 * this.__X;
+        this.__lons[14] = 5 * this.__X;
+        this.__lons[15] = -3 * this.__X;
+        this.__lons[16] = -this.__X;
+        this.__lons[17] = this.__X;
+        this.__lons[18] = 3 * this.__X;
+        this.__lons[19] = 5 * this.__X;
     }
 
     /**
@@ -418,22 +419,60 @@ public class ISEAProjection {
     }
 
     private double _getLat(Face f) {
-        return this._getLat(f.getFace());
+        return this.getLat(f.getFace());
     }
     private double _getLon(Face f) {
-        return this._getLon(f.getFace());
+        return this.getLon(f.getFace());
     }
     private double _getLat(FaceCoordinates c) {
-        return this._getLat(c.getFace());
+        return this.getLat(c.getFace());
     }
     private double _getLon(FaceCoordinates c) {
-        return this._getLon(c.getFace());
+        return this.getLon(c.getFace());
     }
-    private double _getLat(int f) {
-        return this.__lats[f];
+
+    /**
+     * Returns latitude for face
+     *
+     * @param face
+     * @return latitude
+     */
+    public double getLat(int face) {
+        return this.__lats[face];
     }
-    private double _getLon(int f) {
-        return this.__lons[f];
+
+    /**
+     * Returns longitude for face
+     *
+     * @param face
+     * @return longitude
+     */
+    public double getLon(int face) {
+        return this.__lons[face];
+    }
+
+    /**
+     * Returns minimium latitude of the given face
+     *
+     * @param face
+     * @return
+     */
+    public double getLonMin(int face) {
+        double lon = this.getLon(face) - this.__X;
+        if (lon < -180) lon += 360;
+        return lon;
+    }
+
+    /**
+     * Returns maximum latitude of the given face
+     *
+     * @param face
+     * @return
+     */
+    public double getLonMax(int face) {
+        double lon = this.getLon(face) + this.__X;
+        if (lon > 180) lon -= 360;
+        return lon;
     }
 
     private class Face {

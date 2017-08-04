@@ -231,14 +231,6 @@ public class ISEA3H {
         return cells;
     }
 
-    private Tuple<Integer, Integer> _integerForFaceCoordinates(FaceCoordinates c) {
-        double x = (this._coordinatesNotSwapped()) ? c.getX() : c.getY();
-        double y = (this._coordinatesNotSwapped()) ? c.getY() : c.getX();
-        int nx = (int)Math.round(x / this._l2);
-        int ny = (int)Math.round(y / this._inverseSqrt3l - ((nx % 2 == 0) ? 0 : .5));
-        return new Tuple(nx, ny);
-    }
-
     private FaceCoordinates _cellCoordinatesForLocationAndFace(int face, GeoCoordinates c) throws Exception {
         return this.cellForLocation(this._projection.sphereToPlanesOfTheFacesOfTheIcosahedron(face, c));
     }
@@ -256,30 +248,40 @@ public class ISEA3H {
     private Collection<GridCell> _cellsForBound(int face, double lat0, double lat1, double lon0, double lon1) throws Exception {
         Set<GridCell> cells = new HashSet<>();
 
-        // bounding box of face (triangle)
-        double sizeX = this._triangleA;
-        double sizeYMin = (this._projection.faceOrientation(face) > 0) ? this._triangleC : this._triangleB;
-        double sizeYMax = (this._projection.faceOrientation(face) > 0) ? this._triangleB : this._triangleC;
-
-        // coordinates for vertices of bbox
-        FaceCoordinates fc1 = this._cellCoordinatesForLocationAndFace(face, new GeoCoordinates(lat0, lon0));
-        FaceCoordinates fc2 = this._cellCoordinatesForLocationAndFace(face, new GeoCoordinates(lat0, lon1));
-        FaceCoordinates fc3 = this._cellCoordinatesForLocationAndFace(face, new GeoCoordinates(lat1, lon0));
-        FaceCoordinates fc4 = this._cellCoordinatesForLocationAndFace(face, new GeoCoordinates(lat1, lon1));
-
-        // find minimum and maximum values
-        double xMin = -sizeX;
-        double xMax = sizeX;
-        double yMin = Math.max(-sizeYMin, Math.min(fc1.getY(), Math.min(fc2.getY(), Math.min(fc3.getY(), fc4.getY()))));
-        double yMax = Math.min(sizeYMax, Math.max(fc1.getY(), Math.max(fc2.getY(), Math.max(fc3.getY(), fc4.getY()))));
-        if (lon1 - lon0 < 360) {
-            xMin = Math.max(xMin, Math.min(fc1.getX(), Math.min(fc2.getX(), Math.min(fc3.getX(), fc4.getX()))));
-            xMax = Math.min(xMax, Math.max(fc1.getX(), Math.max(fc2.getX(), Math.max(fc3.getX(), fc4.getX()))));
-        }
+        // coordinates for face
+        double d = this._projection.faceOrientation(face);
+        GeoCoordinates fcLeftBottom = this._projection.icosahedronToSphere(new FaceCoordinates(face, -this._triangleA, -d * this._triangleC));
+        GeoCoordinates fcTop = this._projection.icosahedronToSphere(new FaceCoordinates(face, 0., d * this._triangleB));
+        double latMinFace = Math.min(fcTop.getLat(), fcLeftBottom.getLat());
+        double latMaxFace = Math.max(fcTop.getLat(), fcLeftBottom.getLat());
+        double lonMinFace = this._projection.getLonMin(face);
+        double lonMaxFace = this._projection.getLonMax(face);
 
         // check whether bbox intersects face
-        double buffer = this._l;
-        if (xMin - buffer > sizeX || xMax + buffer < -sizeX  || yMin - buffer > sizeYMax || yMax + buffer < -sizeYMin) return cells;
+        if (latMaxFace < lat0 || latMinFace > lat1) return cells;
+        if (lonMinFace < lonMaxFace) if (lonMaxFace < lon0 || lonMinFace > lon1) return cells;
+        else if (lonMaxFace < lon0 && lonMinFace > lon1) return cells;
+
+        // coordinates for vertices of bbox
+        FaceCoordinates fc00 = this._cellCoordinatesForLocationAndFace(face, new GeoCoordinates(lat0, lon0));
+        FaceCoordinates fc01 = this._cellCoordinatesForLocationAndFace(face, new GeoCoordinates(lat0, lon1));
+        FaceCoordinates fc10 = this._cellCoordinatesForLocationAndFace(face, new GeoCoordinates(lat1, lon0));
+        FaceCoordinates fc11 = this._cellCoordinatesForLocationAndFace(face, new GeoCoordinates(lat1, lon1));
+
+        // maximum values for face
+        double xMin = -this._triangleA;
+        double xMax = this._triangleA;
+        double yMin = (this._projection.faceOrientation(face) > 0) ? -this._triangleC : -this._triangleB;
+        double yMax = (this._projection.faceOrientation(face) > 0) ? this._triangleB : this._triangleC;
+
+        // lower maximum values for face if possible
+        if (face >= 7) {
+            double buffer = this._l0 / 6;
+            if (latMinFace < lat0) yMin = Math.min(fc00.getY(), fc01.getY()) - buffer;
+            if (latMaxFace > lat1) yMax = Math.max(fc10.getY(), fc11.getY()) + buffer;
+            if (lonMinFace < lon0) xMin = Math.min(fc00.getX(), fc10.getX()) - buffer;
+            if (lonMaxFace > lon1) xMax = Math.max(fc01.getX(), fc11.getX()) + buffer;
+        }
 
         // compute cells
         Tuple<Integer, Integer> fcMinN = this._integerForFaceCoordinates(this.cellForLocation(new FaceCoordinates(face, xMin, yMin)));
@@ -301,7 +303,7 @@ public class ISEA3H {
     private GridCell _newGridCell(GeoCoordinates gc, FaceCoordinates fc) throws Exception {
         int d = this._projection.faceOrientation(fc);
         boolean isPentagon = (Math.abs(Math.abs(fc.getX()) - this._triangleA) < this._precision && Math.abs(fc.getY() + d * this._triangleC) < this._precision) || (Math.abs(fc.getX()) < this._precision && Math.abs(fc.getY() - d * this._triangleB) < this._precision);
-        return new GridCell(this._resolution, gc, isPentagon, fc.getFace());
+        return new GridCell(this._resolution, gc, isPentagon);
     }
 
     /**
@@ -336,10 +338,17 @@ public class ISEA3H {
      * @return coordinates on the face
      */
     private FaceCoordinates _getCoordinatesOfCenter(int face, int nx, int ny) {
-//        System.out.println("l2 " + this._l2 + " inverseSqrt3l " + this._inverseSqrt3l + " nx " + nx + " ny " + ny);
         double x = nx * this._l2;
         double y = (ny + ((nx % 2 == 0) ? 0 : .5)) * this._inverseSqrt3l;
         return this._faceCoordinatesSwapByResolution(face, x, y);
+    }
+
+    private Tuple<Integer, Integer> _integerForFaceCoordinates(FaceCoordinates c) {
+        double x = (this._coordinatesNotSwapped()) ? c.getX() : c.getY();
+        double y = (this._coordinatesNotSwapped()) ? c.getY() : c.getX();
+        int nx = (int)Math.round(x / this._l2);
+        int ny = (int)Math.round(y / this._inverseSqrt3l - ((nx % 2 == 0) ? 0 : .5));
+        return new Tuple(nx, ny);
     }
 
     private boolean _isCoordinatesInFace(FaceCoordinates fc) {
