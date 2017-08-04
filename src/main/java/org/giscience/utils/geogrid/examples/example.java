@@ -62,7 +62,10 @@ public class Example {
 
         // determine cell for geographic coordinates
         for (int i = 0; i < 10; i++) {
-            GridCell c = g.cellForLocation(Math.random() * 180 - 90, Math.random() * 360);
+            double lat = Math.random() * 180 - 90;
+            double lon = Math.random() * 360;
+            GridCell c = g.cellForLocation(lat, lon);
+            System.out.format("lat %f - lon %f%n", lat, lon);
             System.out.println(c);
             System.out.println("------");
         }
