@@ -87,7 +87,7 @@ public class ISEA3HTest {
         ISEA3H grid = new ISEA3H(resolution);
         for (int i = 0; i < this._iterations; i++) {
             FaceCoordinates c = new FaceCoordinates(1, Math.random() * 100 - 50, Math.random() * 100 - 50);
-            assertTrue(c.distanceTo(grid.cellForLocation(c)) <= grid.diameterOfCellOnIcosahedron() / 2. + this._precision);
+            assertTrue(c.distanceTo(grid.cellForLocation(c)) <= grid.diameterOfHexagonCellOnIcosahedron() / 2. + this._precision);
         }
     }
 }

@@ -87,9 +87,9 @@ public class ISEA3H {
     }
 
     /**
-     * @return diameter of a cell
+     * @return diameter of a hexagon cell
      */
-    public double diameterOfCellOnIcosahedron() {
+    public double diameterOfHexagonCellOnIcosahedron() {
         return this._l23;
     }
 
@@ -328,8 +328,8 @@ public class ISEA3H {
     public Double bufferEstimator(double lat0, double lat1, double lon0, double lon1) throws Exception {
         FaceCoordinates southWest = this._projection.sphereToIcosahedron(new GeoCoordinates(lat0, lon0));
         FaceCoordinates northEast = this._projection.sphereToIcosahedron(new GeoCoordinates(lat0, lon0));
-        GeoCoordinates southWest2 = this._projection.icosahedronToSphere(new FaceCoordinates(southWest.getFace(), southWest.getX() - this.diameterOfCellOnIcosahedron() / 2, southWest.getY() - this.diameterOfCellOnIcosahedron() / 2));
-        GeoCoordinates northEast2 = this._projection.icosahedronToSphere(new FaceCoordinates(northEast.getFace(), northEast.getX() - this.diameterOfCellOnIcosahedron() / 2, northEast.getY() - this.diameterOfCellOnIcosahedron() / 2));
+        GeoCoordinates southWest2 = this._projection.icosahedronToSphere(new FaceCoordinates(southWest.getFace(), southWest.getX() - this.diameterOfHexagonCellOnIcosahedron() / 2, southWest.getY() - this.diameterOfHexagonCellOnIcosahedron() / 2));
+        GeoCoordinates northEast2 = this._projection.icosahedronToSphere(new FaceCoordinates(northEast.getFace(), northEast.getX() - this.diameterOfHexagonCellOnIcosahedron() / 2, northEast.getY() - this.diameterOfHexagonCellOnIcosahedron() / 2));
         List<Double> l = new ArrayList<>();
         l.add(Math.abs(southWest2.getLat() - lat0));
         l.add(Math.abs(southWest2.getLon() - lon0));
