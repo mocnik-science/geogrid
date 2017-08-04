@@ -45,9 +45,11 @@ import org.giscience.utils.geogrid.generic.Trigonometric;
  * @author Franz-Benjamin Mocnik
  */
 public class ISEAProjection {
+    // constants
+    private final double _goldenRatio = (1 + Math.sqrt(5)) / 2.;
     // radius
-    private final double _RR_earth = Math.sqrt((this._G - this._theta) * Math.PI / (90 * Trigonometric.sin(this._theta) * Trigonometric.cos(this._theta))) / Trigonometric.tan(this._g); // R' / R
-    private final double _R = this._RR_earth * this._R_earth; // R'
+    private final double _RR_earth; // R' / R
+    private final double _R; // R'
     private final double _R_earth = WGS84.radiusAuthalic; // R // authalic sphere radius for WGS84 [km]
     // faces
     private final int _numberOfFaces = 20;
@@ -55,7 +57,7 @@ public class ISEAProjection {
     private double _orientationLat = 0;
     private double _orientationLon = 0;
     // spherical constants
-    private final double _g = 37.37736814; // g
+    private final double _g; // g
     private final int _G = 36; // G
     private final int _theta = 30; // \theta
     // distortion
@@ -63,29 +65,44 @@ public class ISEAProjection {
     private final double _a = 1.163; // a
     private final double _b = .860; // b
     // face constants
-    private final double __E = 90 - this._g; // E
-    private final double __F = 10.81231696; // F
-    private final double __G = this._R * Trigonometric.tan(this._g) * Math.sqrt(3) / 2.; // G // this value incorporates R', and not R, as is stated wrongly in the paper by Snyder
+    private final double __E; // E
+    private final double __F = Trigonometric.atan(1 / (2 * Math.pow(this._goldenRatio, 2))); // F = \atan(1 / (2 \phi)) where \phi = (1 + \sqrt{5}) / 2 is the golden ratio; needs some thinking to derive
+    // alternative computation F = 90 + g - 2 * \atan(\phi); formula can easily be derived from the cartesian coordinates of the vertices of the icosahedron
+    private final double __G; // G // this value incorporates R', and not R, as is stated wrongly in the paper by Snyder
     private final int __X = 36; // half the difference in latitude between two horizontally adjacent faces
     private final double[] __lats = new double[20];
     private final int[] __lons = new int[20];
     // precision
     private final double _precision = 1e-9;
     // computed values
-    private final double _2R = 2 * this._R; // 2 R'
-    private final double __EF = this.__E - this.__F; // E - F
+    private final double _2R; // 2 R'
+    private final double __EF; // E - F
     private final int _AzMax = 2 * (90 - this._theta); // 2 (90 - \theta)
-    private final double _tan_g = Trigonometric.tan(this._g); // \tan g
+    private final double _tan_g; // \tan g
     private final double _cosG = Trigonometric.cos(this._G); // \cos G
     private final double _cotTheta = Trigonometric.cot(this._theta); // \cot \theta
     private final double _2cotTheta = 2 * this._cotTheta; // 2 \cot \theta
     private final double _pi_R_earth2_180 = Math.PI * Math.pow(this._R_earth, 2) / 180; // \pi R^2 / 180
-    private final double _R_tan_g = this._R * this._tan_g; // R' \tan g
-    private final double _R_tan_g_2 = Math.pow(this._R_tan_g, 2); // R'^2 * \tan^2 g
-    private final double _sinG_cos_g = Trigonometric.sin(this._G) * Trigonometric.cos(this._g); // \sin G \cos g
+    private final double _R_tan_g; // R' \tan g
+    private final double _R_tan_g_2; // R'^2 * \tan^2 g
+    private final double _sinG_cos_g; // \sin G \cos g
     private final double _G_180 = this._G - 180; // G - 180
 
     public ISEAProjection() {
+        // computations
+        this._g = this.__F + 2 * Trigonometric.atan(this._goldenRatio) - 90;
+        this._RR_earth = Math.sqrt((this._G - this._theta) * Math.PI / (45 * Trigonometric.sin(2 * this._theta))) / Trigonometric.tan(this._g);
+        this._R = this._RR_earth * this._R_earth;
+        this.__E = 90 - this._g;
+        this.__G = this._R * Trigonometric.tan(this._g) * Math.sqrt(3) / 2.;
+        this._2R = 2 * this._R;
+        this.__EF = this.__E - this.__F;
+        this._tan_g = Trigonometric.tan(this._g);
+        this._R_tan_g = this._R * this._tan_g;
+        this._R_tan_g_2 = Math.pow(this._R_tan_g, 2);
+        this._sinG_cos_g = Trigonometric.sin(this._G) * Trigonometric.cos(this._g);
+
+        // angles of the faces
         this.__lats[0] = this.__E;
         this.__lats[1] = this.__E;
         this.__lats[2] = this.__E;
