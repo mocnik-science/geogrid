@@ -33,19 +33,38 @@ public class ISEA3HTest {
     private final int _iterations = 1000000;
 
     @Test
-    public void numberOfCells() {
-        this._numberOfCells(1, 20);
-        this._numberOfCells(2, 80);
-        this._numberOfCells(3, 260);
-        this._numberOfCells(4, 800);
-        this._numberOfCells(15, 143489060);
-        this._numberOfCells(16, 430467200);
+    public void numberOfCellsByNumber() {
+        this._numberOfCellsByNumber(1, 20);
+        this._numberOfCellsByNumber(2, 80);
+        this._numberOfCellsByNumber(3, 260);
+        this._numberOfCellsByNumber(4, 800);
+        this._numberOfCellsByNumber(15, 143489060);
+        this._numberOfCellsByNumber(16, 430467200);
     }
-    public void _numberOfCells(int resolution, int numberOfHexagonCells) {
+    public void _numberOfCellsByNumber(int resolution, int numberOfHexagonCells) {
         ISEA3H grid = new ISEA3H(resolution);
         assertEquals(grid.numberOfHexagonCells(), numberOfHexagonCells);
         assertEquals(grid.numberOfPentagonCells(), 12);
+    }
+
+    @Test
+    public void numberOfCellsByArea() {
+        for (int r = 1; r < 19; r++) this._numberOfCellsByArea(r);
+    }
+    public void _numberOfCellsByArea(int resolution) {
+        ISEA3H grid = new ISEA3H(resolution);
         assertTrue(grid.numberOfHexagonCells() * grid.areaOfHexagonCell() + grid.numberOfPentagonCells() * grid.areaOfPentagonCell() - WGS84.areaOfEarth < WGS84.areaOfEarth * this._precision2);
+    }
+
+    @Test
+    public void numberOfCellsByGrid() throws Exception {
+        for (int r = 1; r < 13; r++) this._numberOfCellsByGrid(r);
+    }
+    public void _numberOfCellsByGrid(int resolution) throws Exception {
+        System.out.println(resolution);
+        ISEA3H grid = new ISEA3H(resolution);
+        System.out.println(grid.cellsForBound(-90, 90, -180, 180).size() + " " + (grid.numberOfHexagonCells() + grid.numberOfPentagonCells()));
+        assertEquals(grid.cellsForBound(-90, 90, -180, 180).size(), grid.numberOfHexagonCells() + grid.numberOfPentagonCells());
     }
 
     @Test
