@@ -53,6 +53,7 @@ public class ISEA3H {
     private final double _l0; // length of the triangle base at resolution 0
     private final double _inverseSqrt3l0; // 1 / \sqrt{3} * l_0
     private final double _l; // length of the triangle base at the given resolution
+    private final double _2l; // 2 * l
     private final double _l2; // l / 2
     private final double _l6; // l / 6
     private final double _l23; // l * 2 / 3
@@ -73,6 +74,7 @@ public class ISEA3H {
         this._l0 = this._projection.lengthOfTriangleBase();
         this._inverseSqrt3l0 = this._inverseSqrt3 * this._l0;
         this._l = Math.pow(this._inverseSqrt3, this._resolution) * this._l0;
+        this._2l = 2 * this._l;
         this._l2 = this._l / 2.;
         this._l6 = this._l / 6.;
         this._l23 = this._l * 2 / 3.;
@@ -231,10 +233,6 @@ public class ISEA3H {
         return cells;
     }
 
-    private FaceCoordinates _cellCoordinatesForLocationAndFace(int face, GeoCoordinates c) throws Exception {
-        return this.cellForLocation(this._projection.sphereToPlanesOfTheFacesOfTheIcosahedron(face, c));
-    }
-
     private Double _bufferEstimator(int face, int nx, int ny) throws Exception {
         GeoCoordinates x = this._projection.icosahedronToSphere(this._getCoordinatesOfCenter(face, nx, ny));
         GeoCoordinates y0 = this._projection.icosahedronToSphere(this._getCoordinatesOfCenter(face, nx + 1, ny));
@@ -249,11 +247,8 @@ public class ISEA3H {
         Set<GridCell> cells = new HashSet<>();
 
         // coordinates for face
-        double d = this._projection.faceOrientation(face);
-        GeoCoordinates fcLeftBottom = this._projection.icosahedronToSphere(new FaceCoordinates(face, -this._triangleA, -d * this._triangleC));
-        GeoCoordinates fcTop = this._projection.icosahedronToSphere(new FaceCoordinates(face, 0., d * this._triangleB));
-        double latMinFace = Math.min(fcTop.getLat(), fcLeftBottom.getLat());
-        double latMaxFace = Math.max(fcTop.getLat(), fcLeftBottom.getLat());
+        double latMinFace = this._projection.getLatMin(face);
+        double latMaxFace = this._projection.getLatMax(face);
         double lonMinFace = this._projection.getLonMin(face);
         double lonMaxFace = this._projection.getLonMax(face);
 
@@ -263,25 +258,37 @@ public class ISEA3H {
         else if (lonMaxFace < lon0 && lonMinFace > lon1) return cells;
 
         // coordinates for vertices of bbox
-        FaceCoordinates fc00 = this._cellCoordinatesForLocationAndFace(face, new GeoCoordinates(lat0, lon0));
-        FaceCoordinates fc01 = this._cellCoordinatesForLocationAndFace(face, new GeoCoordinates(lat0, lon1));
-        FaceCoordinates fc10 = this._cellCoordinatesForLocationAndFace(face, new GeoCoordinates(lat1, lon0));
-        FaceCoordinates fc11 = this._cellCoordinatesForLocationAndFace(face, new GeoCoordinates(lat1, lon1));
+        double d = this._projection.faceOrientation(face);
+        double lonFace = this._projection.getLon(face);
+        FaceCoordinates fcLat0 = this._projection.sphereToPlanesOfTheFacesOfTheIcosahedron(face, new GeoCoordinates(lat0, (lat0 > 0) ? lonFace : lonMinFace));
+        FaceCoordinates fcLat1 = this._projection.sphereToPlanesOfTheFacesOfTheIcosahedron(face, new GeoCoordinates(lat1, (lat0 > 0) ? lonMinFace : lonFace));
+        FaceCoordinates fcLon0 = null;
+        FaceCoordinates fcLon1 = null;
+        double lonMinFace2 = (lonMinFace <= lonMaxFace) ? lonMinFace : lonMinFace - 360;
+        double lon02 = (lon0 <= lonMaxFace) ? lon0 : lon0 - 360;
+        double lon12 = (lon1 <= lonMaxFace) ? lon1 : lon1 - 360;
+        double m = (latMaxFace - latMinFace) / (lonMaxFace - lonMinFace2);
+        if (lon02 > lonMinFace2) {
+            double latEstimate0 = latMinFace + m * (lon02 - lonMinFace2);
+            fcLon0 = this._projection.sphereToPlanesOfTheFacesOfTheIcosahedron(face, new GeoCoordinates((latEstimate0 >= -180) ? latEstimate0 : latEstimate0 + 360, lon02));
+        }
+        if (lon12 > lonMinFace2) {
+            double latEstimate1 = latMaxFace - m * (lon12 - lonMinFace2);
+            fcLon1 = this._projection.sphereToPlanesOfTheFacesOfTheIcosahedron(face, new GeoCoordinates((latEstimate1 >= -180) ? latEstimate1 : latEstimate1 + 360, lon12));
+        }
 
         // maximum values for face
         double xMin = -this._triangleA;
         double xMax = this._triangleA;
-        double yMin = (this._projection.faceOrientation(face) > 0) ? -this._triangleC : -this._triangleB;
-        double yMax = (this._projection.faceOrientation(face) > 0) ? this._triangleB : this._triangleC;
+        double yMin = (d > 0) ? -this._triangleC : -this._triangleB;
+        double yMax = (d > 0) ? this._triangleB : this._triangleC;
 
         // lower maximum values for face if possible
-        if (face >= 7) {
-            double buffer = this._l0 / 6;
-            if (latMinFace < lat0) yMin = Math.min(fc00.getY(), fc01.getY()) - buffer;
-            if (latMaxFace > lat1) yMax = Math.max(fc10.getY(), fc11.getY()) + buffer;
-            if (lonMinFace < lon0) xMin = Math.min(fc00.getX(), fc10.getX()) - buffer;
-            if (lonMaxFace > lon1) xMax = Math.max(fc01.getX(), fc11.getX()) + buffer;
-        }
+        double buffer = this._2l;
+        if (latMinFace < lat0) yMin = fcLat0.getY() - buffer;
+        if (latMaxFace > lat1) yMax = fcLat1.getY() + buffer;
+        if (fcLon0 != null && lonMinFace < lon0) xMin = fcLon0.getX() - buffer;
+        if (fcLon1 != null && lonMaxFace > lon1) xMax = fcLon1.getX() + buffer;
 
         // compute cells
         Tuple<Integer, Integer> fcMinN = this._integerForFaceCoordinates(this.cellForLocation(new FaceCoordinates(face, xMin, yMin)));

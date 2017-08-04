@@ -457,6 +457,38 @@ public class ISEAProjection {
      * @param face
      * @return
      */
+    public double getLatMin(int face) {
+        int d = this.faceOrientation(face);
+        return (d > 0) ? this._getLatMin(face, d) : this._getLatMax(face, d);
+    }
+
+    /**
+     * Returns maximum latitude of the given face
+     *
+     * @param face
+     * @return
+     */
+    public double getLatMax(int face) {
+        int d = this.faceOrientation(face);
+        return (d > 0) ? this._getLatMax(face, d) : this._getLatMin(face, d);
+    }
+
+    private double _getLatMin(int face, int upright) {
+        return this.getLat(face) - upright * (this.__E + this.__F - this._g);
+    }
+    private double _getLatMax(int face, int upright) {
+        double lat = this.getLat(face) + upright * this._g;
+        if (lat > 90) lat = 90;
+        if (lat < -90) lat = -90;
+        return lat;
+    }
+
+    /**
+     * Returns minimium longitude of the given face
+     *
+     * @param face
+     * @return
+     */
     public double getLonMin(int face) {
         double lon = this.getLon(face) - this.__X;
         if (lon < -180) lon += 360;
@@ -464,7 +496,7 @@ public class ISEAProjection {
     }
 
     /**
-     * Returns maximum latitude of the given face
+     * Returns maximum longitude of the given face
      *
      * @param face
      * @return
