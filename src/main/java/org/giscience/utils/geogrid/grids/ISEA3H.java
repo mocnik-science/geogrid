@@ -225,7 +225,7 @@ public class ISEA3H {
         return cells;
     }
 
-    public Collection<GridCell> _cellsForBound(double lat0, double lat1, double lon0, double lon1) throws Exception {
+    private Collection<GridCell> _cellsForBound(double lat0, double lat1, double lon0, double lon1) throws Exception {
         Set<GridCell> cells = new HashSet<>();
         for (int f = 0; f < this._projection.numberOfFaces(); f++) cells.addAll(this._cellsForBound(f, lat0, lat1, lon0, lon1));
         return cells;
