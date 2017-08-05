@@ -177,7 +177,16 @@ public class ISEAProjection {
         this.setOrientation((90 + this.__E) / 2., 36.);
     }
 
-    private GeoCoordinates _changeOrientation(GeoCoordinates c) throws Exception {
+    /**
+     * Only for internal use!
+     * Changes the orientation of geocoordinates, that is, rotates the coordinate system
+     *
+     * @param c
+     * @return
+     * @throws Exception
+     */
+    public GeoCoordinates _changeOrientation(GeoCoordinates c) throws Exception {
+        if (this._orientationLat == 0 && this._orientationLon == 0) return c;
         double sinOrientationLat = Trigonometric.sin(this._orientationLat);
         double cosOrientationLat = Trigonometric.cos(this._orientationLat);
         double sinLat1 = Trigonometric.sin(c.getLat());
@@ -190,7 +199,16 @@ public class ISEAProjection {
         return new GeoCoordinates(lat2, lon2);
     }
 
-    private GeoCoordinates _revertOrientation(GeoCoordinates c) throws Exception {
+    /**
+     * Only for internal use!
+     * Inverse of _changeOrientation
+     *
+     * @param c
+     * @return
+     * @throws Exception
+     */
+    public GeoCoordinates _revertOrientation(GeoCoordinates c) throws Exception {
+        if (this._orientationLat == 0 && this._orientationLon == 0) return c;
         double sinOrientationLat = Trigonometric.sin(-this._orientationLat);
         double cosOrientationLat = Trigonometric.cos(this._orientationLat);
         double sinLat1 = Trigonometric.sin(c.getLat());
@@ -266,6 +284,19 @@ public class ISEAProjection {
      */
     public FaceCoordinates sphereToPlanesOfTheFacesOfTheIcosahedron(int face, GeoCoordinates c) throws Exception {
         c = this._changeOrientation(c);
+        return this.sphereToFace(c, new Face(face, this, c));
+    }
+
+    /**
+     * Only for internal use!
+     * Same as sphereToPlanesOfTheFacesOfTheIcosahedron, but without changing the orientation of the coordinates.
+     *
+     * @param face
+     * @param c
+     * @return
+     * @throws Exception
+     */
+    public FaceCoordinates _sphereToPlanesOfTheFacesOfTheIcosahedronWithoutOrientation(int face, GeoCoordinates c) throws Exception {
         return this.sphereToFace(c, new Face(face, this, c));
     }
 

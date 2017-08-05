@@ -210,40 +210,73 @@ public class ISEA3H {
      */
     public Collection<GridCell> cellsForBound(double lat0, double lat1, double lon0, double lon1) throws Exception {
         Set<GridCell> cells = new HashSet<>();
-        if (lon1 - lon0 >= 360) {
-            cells.addAll(this._cellsForBound(lat0, lat1, -180, 180));
-            return cells;
+
+        // normalize longitude
+        if (lon1 - lon0 > 360) {
+            lon0 = -180;
+            lon1 = 180;
+        } else {
+            lon0 %= 360;
+            lon1 %= 360;
+            lon0 -= 360;
+            lon1 -= 360;
+            while (lon0 < -180) lon0 += 360;
+            while (lon1 < -180) lon1 += 360;
         }
-        lon0 %= 360;
-        lon1 %= 360;
-        lon0 -= 360;
-        lon1 -= 360;
-        while (lon0 < -180) lon0 += 360;
-        while (lon1 < -180) lon1 += 360;
-        if (lon1 < lon0) {
-            cells.addAll(this._cellsForBound(lat0, lat1, -180, lon1));
-            cells.addAll(this._cellsForBound(lat0, lat1, lon0, 180));
-        } else cells.addAll(this._cellsForBound(lat0, lat1, lon0, lon1));
+
+        // change the orientation of the coordinates
+        GeoCoordinates gc00 = this._projection._changeOrientation(new GeoCoordinates(lat0, lon0));
+        GeoCoordinates gc10 = this._projection._changeOrientation(new GeoCoordinates(lat1, lon0));
+        GeoCoordinates gc01 = this._projection._changeOrientation(new GeoCoordinates(lat0, lon1));
+        GeoCoordinates gc11 = this._projection._changeOrientation(new GeoCoordinates(lat1, lon1));
+        double lat0t = Math.min(gc00.getLat(), Math.min(gc10.getLat(), Math.min(gc01.getLat(), gc11.getLat())));
+        double lat1t = Math.max(gc00.getLat(), Math.max(gc10.getLat(), Math.max(gc01.getLat(), gc11.getLat())));
+        double lon0t = Math.min(gc00.getLon(), Math.min(gc10.getLon(), Math.min(gc01.getLon(), gc11.getLon())));
+        double lon1t = Math.max(gc00.getLon(), Math.max(gc10.getLon(), Math.max(gc01.getLon(), gc11.getLon())));
+
+        // test which of the potential areas is targeted
+        GeoCoordinates c = this._projection._revertOrientation(new GeoCoordinates((lat0t + lat1t) / 2, (lon0t + lon1t) / 2));
+        boolean insideLat = lat0 <= c.getLat() && c.getLat() <= lat1;
+        boolean insideLon = (lon0 <= lon1) ? (lon0 <= c.getLon() && c.getLon() <= lon1) : (lon1 <= c.getLon() || c.getLon() <= lon0);
+
+        // compute
+        if (lon0 == -180 && lon1 == 180) {
+            cells.addAll(this._cellsForBound0(-90, 90, -180, 180, -90, 90, -180, 180));
+        } else if (insideLat && insideLon) {
+            cells.addAll(this._cellsForBound0(lat0t, lat1t, lon0t, lon1t, lat0, lat1, lon0, lon1));
+        } else if (!insideLat && !insideLon) {
+            cells.addAll(this._cellsForBound0(lat0t, 90, lon0t, 180, lat0, lat1, lon0, lon1));
+            cells.addAll(this._cellsForBound0(lat0t, 90, -180, lon1t, lat0, lat1, lon0, lon1));
+            cells.addAll(this._cellsForBound0(-90, lat1t, -180, lon1t, lat0, lat1, lon0, lon1));
+            cells.addAll(this._cellsForBound0(-90, lat1t, lon0t, 180, lat0, lat1, lon0, lon1));
+        } else if (insideLat) {
+            cells.addAll(this._cellsForBound0(lat0t, lat1t, lon0t, 180, lat0, lat1, lon0, lon1));
+            cells.addAll(this._cellsForBound0(lat0t, lat1t, -180, lon1t, lat0, lat1, lon0, lon1));
+        } else if (insideLon) {
+            cells.addAll(this._cellsForBound0(lat0t, 90, lon0t, lon1t, lat0, lat1, lon0, lon1));
+            cells.addAll(this._cellsForBound0(-90, lat1t, lon0t, lon1t, lat0, lat1, lon0, lon1));
+        }
+
         return cells;
     }
 
-    private Collection<GridCell> _cellsForBound(double lat0, double lat1, double lon0, double lon1) throws Exception {
+    private Collection<GridCell> _cellsForBound0(double lat0, double lat1, double lon0, double lon1, double lat0Untransformed, double lat1Untransformed, double lon0Untransformed, double lon1Untransformed) throws Exception {
         Set<GridCell> cells = new HashSet<>();
-        for (int f = 0; f < this._projection.numberOfFaces(); f++) cells.addAll(this._cellsForBound(f, lat0, lat1, lon0, lon1));
+        if (lon0Untransformed <= lon1Untransformed) cells.addAll(this._cellsForBound1(lat0, lat1, lon0, lon1, lat0Untransformed, lat1Untransformed, lon0Untransformed, lon1Untransformed));
+        else {
+            cells.addAll(this._cellsForBound1(lat0, lat1, lon0, lon1, lat0Untransformed, lat1Untransformed, lon0Untransformed, 180));
+            cells.addAll(this._cellsForBound1(lat0, lat1, lon0, lon1, lat0Untransformed, lat1Untransformed, -180, lon1Untransformed));
+        }
         return cells;
     }
 
-    private Double _bufferEstimator(int face, int nx, int ny) throws Exception {
-        GeoCoordinates x = this._projection.icosahedronToSphere(this._getCoordinatesOfCenter(face, nx, ny));
-        GeoCoordinates y0 = this._projection.icosahedronToSphere(this._getCoordinatesOfCenter(face, nx + 1, ny));
-        GeoCoordinates y1 = this._projection.icosahedronToSphere(this._getCoordinatesOfCenter(face, nx, ny + 1));
-        double d0 = Math.pow(x.getLat() - y0.getLat(), 2) + Math.pow(x.getLon() - y0.getLon(), 2);
-        double d1 = Math.pow(x.getLat() - y1.getLat(), 2) + Math.pow(x.getLon() - y1.getLon(), 2);
-        double d = (d0 > d1) ? Math.sqrt(d0) : Math.sqrt(d1);
-        return 2 * d;
+    private Collection<GridCell> _cellsForBound1(double lat0, double lat1, double lon0, double lon1, double lat0Untransformed, double lat1Untransformed, double lon0Untransformed, double lon1Untransformed) throws Exception {
+        Set<GridCell> cells = new HashSet<>();
+        for (int f = 0; f < this._projection.numberOfFaces(); f++) cells.addAll(this._cellsForBound2(f, lat0, lat1, lon0, lon1, lat0Untransformed, lat1Untransformed, lon0Untransformed, lon1Untransformed));
+        return cells;
     }
 
-    private Collection<GridCell> _cellsForBound(int face, double lat0, double lat1, double lon0, double lon1) throws Exception {
+    private Collection<GridCell> _cellsForBound2(int face, double lat0, double lat1, double lon0, double lon1, double lat0Untransformed, double lat1Untransformed, double lon0Untransformed, double lon1Untransformed) throws Exception {
         Set<GridCell> cells = new HashSet<>();
 
         // coordinates for face
@@ -257,24 +290,33 @@ public class ISEA3H {
         if (lonMinFace < lonMaxFace) if (lonMaxFace < lon0 || lonMinFace > lon1) return cells;
         else if (lonMaxFace < lon0 && lonMinFace > lon1) return cells;
 
-        // coordinates for vertices of bbox
+        // face coordinates of bbox (only longitude)
         double d = this._projection.faceOrientation(face);
+        double latFace = this._projection.getLat(face);
         double lonFace = this._projection.getLon(face);
-        FaceCoordinates fcLat0 = this._projection.sphereToPlanesOfTheFacesOfTheIcosahedron(face, new GeoCoordinates(lat0, (lat0 > 0) ? lonFace : lonMinFace));
-        FaceCoordinates fcLat1 = this._projection.sphereToPlanesOfTheFacesOfTheIcosahedron(face, new GeoCoordinates(lat1, (lat0 > 0) ? lonMinFace : lonFace));
+        FaceCoordinates fcLat0 = this._projection._sphereToPlanesOfTheFacesOfTheIcosahedronWithoutOrientation(face, new GeoCoordinates(lat0, (lat0 > 0) ? lonFace : lonMinFace));
+        FaceCoordinates fcLat1 = this._projection._sphereToPlanesOfTheFacesOfTheIcosahedronWithoutOrientation(face, new GeoCoordinates(lat1, (lat0 > 0) ? lonMinFace : lonFace));
+        double lonMinFace2 = lonMinFace + ((lonMinFace <= lonMaxFace) ? 0 : -360);
+        double lon02 = lon0 + ((lon0 <= lonMaxFace) ? 0 : -360);
+        double lon12 = lon1 + ((lon1 <= lonMaxFace) ? 0 : -360);
+        double m = (latMaxFace - latMinFace) / (lonMaxFace - lonMinFace2);
         FaceCoordinates fcLon0 = null;
         FaceCoordinates fcLon1 = null;
-        double lonMinFace2 = (lonMinFace <= lonMaxFace) ? lonMinFace : lonMinFace - 360;
-        double lon02 = (lon0 <= lonMaxFace) ? lon0 : lon0 - 360;
-        double lon12 = (lon1 <= lonMaxFace) ? lon1 : lon1 - 360;
-        double m = (latMaxFace - latMinFace) / (lonMaxFace - lonMinFace2);
-        if (lon02 > lonMinFace2) {
-            double latEstimate0 = latMinFace + m * (lon02 - lonMinFace2);
-            fcLon0 = this._projection.sphereToPlanesOfTheFacesOfTheIcosahedron(face, new GeoCoordinates((latEstimate0 >= -180) ? latEstimate0 : latEstimate0 + 360, lon02));
+        if (lonMinFace < lon0) {
+            double latToUse;
+            if (latFace > 0 && d > 0) latToUse = (lon0 < lonFace) ? Math.max(latMinFace, lat0) : Math.min(latMaxFace, lat1);
+            else if (latFace > 0 && d < 0) latToUse = (lon0 < lonFace) ? Math.min(latMaxFace - m * (lon02 - lonMinFace2), lat1) : Math.min(latMaxFace, lat1);
+            else if (latFace < 0 && d > 0) latToUse = (lon0 < lonFace) ? Math.max(latMinFace + m * (lon02 - lonMinFace2), lat0) : Math.max(latMinFace, lat0);
+            else latToUse = (lon0 < lonFace) ? Math.min(latMaxFace, lat1) : Math.max(latMinFace, lat0);
+            fcLon0 = this._projection._sphereToPlanesOfTheFacesOfTheIcosahedronWithoutOrientation(face, new GeoCoordinates(latToUse, lon0));
         }
-        if (lon12 > lonMinFace2) {
-            double latEstimate1 = latMaxFace - m * (lon12 - lonMinFace2);
-            fcLon1 = this._projection.sphereToPlanesOfTheFacesOfTheIcosahedron(face, new GeoCoordinates((latEstimate1 >= -180) ? latEstimate1 : latEstimate1 + 360, lon12));
+        if (lonMaxFace > lon1) {
+            double latToUse;
+            if (latFace > 0 && d > 0) latToUse = (lon1 < lonFace) ? Math.min(latMaxFace, lat1) : Math.max(latMinFace, lat0);
+            else if (latFace > 0 && d < 0) latToUse = (lon1 < lonFace) ? Math.min(latMaxFace, lat1) : Math.max(latMinFace + m * (lon12 - lonMinFace2), lat0);
+            else if (latFace < 0 && d > 0) latToUse = (lon1 < lonFace) ? Math.max(latMinFace, lat0) : Math.min(latMaxFace - m * (lon12 - lonMinFace2), lat1);
+            else latToUse = (lon1 < lonFace) ? Math.max(latMinFace, lat0) : Math.min(latMaxFace, lat1);
+            fcLon1 = this._projection._sphereToPlanesOfTheFacesOfTheIcosahedronWithoutOrientation(face, new GeoCoordinates(latToUse, lon1));
         }
 
         // maximum values for face
@@ -285,10 +327,10 @@ public class ISEA3H {
 
         // lower maximum values for face if possible
         double buffer = this._2l;
-        if (latMinFace < lat0) yMin = fcLat0.getY() - buffer;
-        if (latMaxFace > lat1) yMax = fcLat1.getY() + buffer;
-        if (fcLon0 != null && lonMinFace < lon0) xMin = fcLon0.getX() - buffer;
-        if (fcLon1 != null && lonMaxFace > lon1) xMax = fcLon1.getX() + buffer;
+        if (latMinFace < lat0) yMin = Math.min(yMin, fcLat0.getY() - buffer);
+        if (latMaxFace > lat1) yMax = Math.max(yMax, fcLat1.getY() + buffer);
+        if (fcLon0 != null) xMin = Math.min(xMin, fcLon0.getX() - buffer);
+        if (fcLon1 != null) xMax = Math.max(xMax, fcLon1.getX() + buffer);
 
         // compute cells
         Tuple<Integer, Integer> fcMinN = this._integerForFaceCoordinates(this.cellForLocation(new FaceCoordinates(face, xMin, yMin)));
@@ -299,12 +341,22 @@ public class ISEA3H {
                 FaceCoordinates fc = this._getCoordinatesOfCenter(face, nx, ny);
                 if (this._isCoordinatesInFace(fc)) {
                     GeoCoordinates gc = this._projection.icosahedronToSphere(fc);
-                    if (lat0 - buffer2 <= gc.getLat() && gc.getLat() <= lat1 + buffer2 && lon0 - buffer2 <= gc.getLon() && gc.getLon() <= lon1 + buffer2) cells.add(this._newGridCell(gc, fc));
+                    if (lat0Untransformed - buffer2 <= gc.getLat() && gc.getLat() <= lat1Untransformed + buffer2 && lon0Untransformed - buffer2 <= gc.getLon() && gc.getLon() <= lon1Untransformed + buffer2) cells.add(this._newGridCell(gc, fc));
                 }
             }
         }
 
         return cells;
+    }
+
+    private Double _bufferEstimator(int face, int nx, int ny) throws Exception {
+        GeoCoordinates x = this._projection.icosahedronToSphere(this._getCoordinatesOfCenter(face, nx, ny));
+        GeoCoordinates y0 = this._projection.icosahedronToSphere(this._getCoordinatesOfCenter(face, nx + 1, ny));
+        GeoCoordinates y1 = this._projection.icosahedronToSphere(this._getCoordinatesOfCenter(face, nx, ny + 1));
+        double d0 = Math.pow(x.getLat() - y0.getLat(), 2) + Math.pow(x.getLon() - y0.getLon(), 2);
+        double d1 = Math.pow(x.getLat() - y1.getLat(), 2) + Math.pow(x.getLon() - y1.getLon(), 2);
+        double d = (d0 > d1) ? Math.sqrt(d0) : Math.sqrt(d1);
+        return 2 * d;
     }
 
     private GridCell _newGridCell(GeoCoordinates gc, FaceCoordinates fc) throws Exception {
