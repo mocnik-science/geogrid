@@ -16,6 +16,8 @@
  */
 package org.giscience.utils.geogrid.geometry;
 
+import org.giscience.utils.geogrid.generic.Trigonometric;
+
 /**
  * Geographic coordinates of a location on Earth.
  *
@@ -40,6 +42,10 @@ public class GeoCoordinates implements Comparable<GeoCoordinates> {
 
     public Double getLon() {
         return this._lon;
+    }
+
+    public Double distanceTo(GeoCoordinates other) {
+        return Trigonometric.acos(Trigonometric.sin(this.getLat()) * Trigonometric.sin(other.getLat()) + Trigonometric.cos(this.getLat()) * Trigonometric.cos(other.getLat()) * Trigonometric.cos(this.getLon() - other.getLon()));
     }
 
     @Override
