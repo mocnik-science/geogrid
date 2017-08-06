@@ -56,7 +56,7 @@ public class Example {
         System.out.println("------");
 
         // get cells in given bounds
-        Collection<GridCell> cells = g.cellsForBound(41, 43, 6, 8);
+        Collection<GridCell> cells = g.cellsForBound(41, 42, 6, 7);
         System.out.println(cells.size());
         System.out.println("------");
 
