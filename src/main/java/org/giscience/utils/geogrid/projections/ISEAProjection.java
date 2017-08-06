@@ -16,10 +16,14 @@
  */
 package org.giscience.utils.geogrid.projections;
 
+import org.giscience.utils.geogrid.generic.FourTuple;
 import org.giscience.utils.geogrid.geo.WGS84;
 import org.giscience.utils.geogrid.geometry.GeoCoordinates;
 import org.giscience.utils.geogrid.geometry.FaceCoordinates;
 import org.giscience.utils.geogrid.generic.Trigonometric;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Icosahedron Snyder equal-area (ISEA) projection
@@ -197,6 +201,53 @@ public class ISEAProjection {
         double lat2 = Trigonometric.asin(sinLat1 * cosOrientationLat + cosLon1 * cosLat1 * sinOrientationLat);
         double lon2 = Trigonometric.atan2(sinLon1 * cosLat1, cosLon1 * cosLat1 * cosOrientationLat - sinLat1 * sinOrientationLat);
         return new GeoCoordinates(lat2, lon2);
+    }
+
+    public double getOrientationLat() {
+        return this._orientationLat;
+    }
+
+    private FourTuple<Double, Double, Double, Double> _changeOrientation0(double lat0, double lat1, double lon0, double lon1) throws Exception {
+        if (lon1 - lon0 >= 360 && lat1 - lat0 >= 180) return new FourTuple<>(-90., 90., -180., 180.);
+
+        // change the orientation of the coordinates
+        GeoCoordinates gc00 = this._changeOrientation(new GeoCoordinates(lat0, lon0));
+        GeoCoordinates gc10 = this._changeOrientation(new GeoCoordinates(lat1, lon0));
+        GeoCoordinates gc01 = this._changeOrientation(new GeoCoordinates(lat0, lon1));
+        GeoCoordinates gc11 = this._changeOrientation(new GeoCoordinates(lat1, lon1));
+        GeoCoordinates gcMid0 = this._changeOrientation(new GeoCoordinates((lat0 + lat1) / 2, lon0));
+        GeoCoordinates gcMid1 = this._changeOrientation(new GeoCoordinates((lat0 + lat1) / 2, lon1));
+
+        double latMin = Math.min(gcMid0.getLat(), Math.min(gcMid1.getLat(), Math.min(gc00.getLat(), Math.min(gc10.getLat(), Math.min(gc01.getLat(), gc11.getLat())))));
+        double latMax = Math.max(gcMid0.getLat(), Math.max(gcMid1.getLat(), Math.max(gc00.getLat(), Math.max(gc10.getLat(), Math.max(gc01.getLat(), gc11.getLat())))));
+        double lonMin = Math.min(gc00.getLon(), Math.min(gc10.getLon(), Math.min(gc01.getLon(), gc11.getLon())));
+        double lonMax = Math.max(gc00.getLon(), Math.max(gc10.getLon(), Math.max(gc01.getLon(), gc11.getLon())));
+
+        // check whether poles are involved
+        double lonMostCentral = 0;
+        if (lonMin * lonMax > 0) lonMostCentral = Math.min(Math.abs(lonMin), Math.abs(lonMax));
+        boolean exceedsPositive = this._changeOrientationSinLatitude(lat0, lonMostCentral) < 0 && 0 < this._changeOrientationSinLatitude(lat1, lonMostCentral);
+        boolean exceedsNegative = this._changeOrientationSinLatitude(lat1, lonMostCentral) < 0 && 0 < this._changeOrientationSinLatitude(lat0, lonMostCentral);
+
+        // return new bbox
+        if (exceedsPositive && exceedsNegative) return new FourTuple<>(-90., 90., -180., 180.);
+        if (exceedsPositive) return new FourTuple<>(latMin, 90., -180., 180.);
+        if (exceedsNegative) return new FourTuple<>(-90., latMax, -180., 180.);
+        return new FourTuple<>(latMin, latMax, lonMin, lonMax);
+    }
+
+    private double _changeOrientationSinLatitude(double lat0, double lonMostCentral) {
+        return Trigonometric.sin(lat0) * Trigonometric.cos(this._orientationLat) + Trigonometric.cos(lonMostCentral + this._orientationLon) * Trigonometric.cos(lat0) * Trigonometric.sin(this._orientationLat);
+    }
+
+    public List<FourTuple<Double, Double, Double, Double>> _changeOrientation(double lat0, double lat1, double lon0, double lon1) throws Exception {
+        List<FourTuple<Double, Double, Double, Double>> result = new ArrayList<>();
+        if (lon0 <= lon1) result.add(this._changeOrientation0(lat0, lat1, lon0, lon1));
+        else {
+            result.add(this._changeOrientation0(lat0, lat1, lon0, 180));
+            result.add(this._changeOrientation0(lat0, lat1, -180, lon1));
+        }
+        return result;
     }
 
     /**

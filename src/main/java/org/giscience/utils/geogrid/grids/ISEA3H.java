@@ -18,6 +18,7 @@ package org.giscience.utils.geogrid.grids;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
+import org.giscience.utils.geogrid.generic.FourTuple;
 import org.giscience.utils.geogrid.generic.Tuple;
 import org.giscience.utils.geogrid.geo.WGS84;
 import org.giscience.utils.geogrid.geometry.FaceCoordinates;
@@ -53,7 +54,7 @@ public class ISEA3H {
     private final double _l0; // length of the triangle base at resolution 0
     private final double _inverseSqrt3l0; // 1 / \sqrt{3} * l_0
     private final double _l; // length of the triangle base at the given resolution
-    private final double _2l; // 2 * l
+    private final double _4l; // 4 * l
     private final double _l2; // l / 2
     private final double _l6; // l / 6
     private final double _l23; // l * 2 / 3
@@ -74,7 +75,7 @@ public class ISEA3H {
         this._l0 = this._projection.lengthOfTriangleBase();
         this._inverseSqrt3l0 = this._inverseSqrt3 * this._l0;
         this._l = Math.pow(this._inverseSqrt3, this._resolution) * this._l0;
-        this._2l = 2 * this._l;
+        this._4l = 4 * this._l;
         this._l2 = this._l / 2.;
         this._l6 = this._l / 6.;
         this._l23 = this._l * 2 / 3.;
@@ -199,8 +200,11 @@ public class ISEA3H {
     }
 
     /**
-     * Returns cells that are inside the bounds, or at least very near. Note that, in fact, all cells are included,
-     * whose center points are less than
+     * Returns cells that are inside the bounds, or at least very near.
+     *
+     * Note that the result should, in fact, include all cells whose center points are inside the given bounds, but also
+     * cells nearby. Observe that it can, however, not be guaranteed that all such cells are returned if the longitude
+     * range is less than 360 degrees or the latitude range is less than 180 degrees.
      *
      * @param lat0
      * @param lat1
@@ -209,10 +213,8 @@ public class ISEA3H {
      * @return cells inside the bounds
      */
     public Collection<GridCell> cellsForBound(double lat0, double lat1, double lon0, double lon1) throws Exception {
-        Set<GridCell> cells = new HashSet<>();
-
         // normalize longitude
-        if (lon1 - lon0 > 360) {
+        if (lon1 - lon0 >= 360) {
             lon0 = -180;
             lon1 = 180;
         } else {
@@ -224,59 +226,44 @@ public class ISEA3H {
             while (lon1 < -180) lon1 += 360;
         }
 
-        // change the orientation of the coordinates
-        GeoCoordinates gc00 = this._projection._changeOrientation(new GeoCoordinates(lat0, lon0));
-        GeoCoordinates gc10 = this._projection._changeOrientation(new GeoCoordinates(lat1, lon0));
-        GeoCoordinates gc01 = this._projection._changeOrientation(new GeoCoordinates(lat0, lon1));
-        GeoCoordinates gc11 = this._projection._changeOrientation(new GeoCoordinates(lat1, lon1));
-        double lat0t = Math.min(gc00.getLat(), Math.min(gc10.getLat(), Math.min(gc01.getLat(), gc11.getLat())));
-        double lat1t = Math.max(gc00.getLat(), Math.max(gc10.getLat(), Math.max(gc01.getLat(), gc11.getLat())));
-        double lon0t = Math.min(gc00.getLon(), Math.min(gc10.getLon(), Math.min(gc01.getLon(), gc11.getLon())));
-        double lon1t = Math.max(gc00.getLon(), Math.max(gc10.getLon(), Math.max(gc01.getLon(), gc11.getLon())));
-
-        // test which of the potential areas is targeted
-        GeoCoordinates c = this._projection._revertOrientation(new GeoCoordinates((lat0t + lat1t) / 2, (lon0t + lon1t) / 2));
-        boolean insideLat = lat0 <= c.getLat() && c.getLat() <= lat1;
-        boolean insideLon = (lon0 <= lon1) ? (lon0 <= c.getLon() && c.getLon() <= lon1) : (lon1 <= c.getLon() || c.getLon() <= lon0);
-
-        // compute
-        if (lon0 == -180 && lon1 == 180) {
-            cells.addAll(this._cellsForBound0(-90, 90, -180, 180, -90, 90, -180, 180));
-        } else if (insideLat && insideLon) {
-            cells.addAll(this._cellsForBound0(lat0t, lat1t, lon0t, lon1t, lat0, lat1, lon0, lon1));
-        } else if (!insideLat && !insideLon) {
-            cells.addAll(this._cellsForBound0(lat0t, 90, lon0t, 180, lat0, lat1, lon0, lon1));
-            cells.addAll(this._cellsForBound0(lat0t, 90, -180, lon1t, lat0, lat1, lon0, lon1));
-            cells.addAll(this._cellsForBound0(-90, lat1t, -180, lon1t, lat0, lat1, lon0, lon1));
-            cells.addAll(this._cellsForBound0(-90, lat1t, lon0t, 180, lat0, lat1, lon0, lon1));
-        } else if (insideLat) {
-            cells.addAll(this._cellsForBound0(lat0t, lat1t, lon0t, 180, lat0, lat1, lon0, lon1));
-            cells.addAll(this._cellsForBound0(lat0t, lat1t, -180, lon1t, lat0, lat1, lon0, lon1));
-        } else if (insideLon) {
-            cells.addAll(this._cellsForBound0(lat0t, 90, lon0t, lon1t, lat0, lat1, lon0, lon1));
-            cells.addAll(this._cellsForBound0(-90, lat1t, lon0t, lon1t, lat0, lat1, lon0, lon1));
-        }
-
+        // compute cells
+        List<GridCell> cells = new ArrayList<>();
+        for (FourTuple<Double, Double, Double, Double> bbox : this._projection._changeOrientation(lat0, lat1, lon0, lon1)) cells.addAll(this._cellsForBound0(bbox._1, bbox._2, bbox._3, bbox._4, lat0, lat1, lon0, lon1));
         return cells;
     }
 
-    private Collection<GridCell> _cellsForBound0(double lat0, double lat1, double lon0, double lon1, double lat0Untransformed, double lat1Untransformed, double lon0Untransformed, double lon1Untransformed) throws Exception {
+    private boolean _isInside(GeoCoordinates c, double lat0, double lat1, double lon0, double lon1, double buffer) {
+        boolean bLat = lat0 - buffer <= c.getLat() && c.getLat() <= lat1 + buffer;
+        boolean bLon = (lon0 <= lon1) ? lon0 - buffer <= c.getLon() && c.getLon() <= lon1 + buffer : lon1 - buffer < c.getLon() || c.getLon() < lon0 + buffer;
+        return bLat && bLon;
+    }
+
+    private Set<GridCell> _cellsForBound0(double lat0, double lat1, double lon0, double lon1, double lat0Untransformed, double lat1Untransformed, double lon0Untransformed, double lon1Untransformed) throws Exception {
         Set<GridCell> cells = new HashSet<>();
-        if (lon0Untransformed <= lon1Untransformed) cells.addAll(this._cellsForBound1(lat0, lat1, lon0, lon1, lat0Untransformed, lat1Untransformed, lon0Untransformed, lon1Untransformed));
-        else {
-            cells.addAll(this._cellsForBound1(lat0, lat1, lon0, lon1, lat0Untransformed, lat1Untransformed, lon0Untransformed, 180));
-            cells.addAll(this._cellsForBound1(lat0, lat1, lon0, lon1, lat0Untransformed, lat1Untransformed, -180, lon1Untransformed));
+        if (lat0 <= lat1 && lon0 <= lon1) {
+            cells = this._cellsForBound1(lat0, lat1, lon0, lon1, lat0Untransformed, lat1Untransformed, lon0Untransformed, lon1Untransformed);
+        } else if (lat0 > lat1 && lon0 <= lon1) {
+            cells.addAll(this._cellsForBound1(lat0, 90, lon0, lon1, lat0Untransformed, lat1Untransformed, lon0Untransformed, lon1Untransformed));
+            cells.addAll(this._cellsForBound1(-90, lat1, lon0, lon1, lat0Untransformed, lat1Untransformed, lon0Untransformed, lon1Untransformed));
+        } else if (lat0 <= lat1 && lon0 > lon1) {
+            cells.addAll(this._cellsForBound1(lat0, lat1, lon0, 180, lat0Untransformed, lat1Untransformed, lon0Untransformed, lon1Untransformed));
+            cells.addAll(this._cellsForBound1(lat0, lat1, -180, lon1, lat0Untransformed, lat1Untransformed, lon0Untransformed, lon1Untransformed));
+        } else {
+            cells.addAll(this._cellsForBound1(lat0, 90, lon0, 180, lat0Untransformed, lat1Untransformed, lon0Untransformed, lon1Untransformed));
+            cells.addAll(this._cellsForBound1(lat0, 90, -180, lon1, lat0Untransformed, lat1Untransformed, lon0Untransformed, lon1Untransformed));
+            cells.addAll(this._cellsForBound1(-90, lat1, lon0, 180, lat0Untransformed, lat1Untransformed, lon0Untransformed, lon1Untransformed));
+            cells.addAll(this._cellsForBound1(-90, lat1, -180, lon1, lat0Untransformed, lat1Untransformed, lon0Untransformed, lon1Untransformed));
         }
         return cells;
     }
 
-    private Collection<GridCell> _cellsForBound1(double lat0, double lat1, double lon0, double lon1, double lat0Untransformed, double lat1Untransformed, double lon0Untransformed, double lon1Untransformed) throws Exception {
+    private Set<GridCell> _cellsForBound1(double lat0, double lat1, double lon0, double lon1, double lat0Untransformed, double lat1Untransformed, double lon0Untransformed, double lon1Untransformed) throws Exception {
         Set<GridCell> cells = new HashSet<>();
         for (int f = 0; f < this._projection.numberOfFaces(); f++) cells.addAll(this._cellsForBound2(f, lat0, lat1, lon0, lon1, lat0Untransformed, lat1Untransformed, lon0Untransformed, lon1Untransformed));
         return cells;
     }
 
-    private Collection<GridCell> _cellsForBound2(int face, double lat0, double lat1, double lon0, double lon1, double lat0Untransformed, double lat1Untransformed, double lon0Untransformed, double lon1Untransformed) throws Exception {
+    private Set<GridCell> _cellsForBound2(int face, double lat0, double lat1, double lon0, double lon1, double lat0Untransformed, double lat1Untransformed, double lon0Untransformed, double lon1Untransformed) throws Exception {
         Set<GridCell> cells = new HashSet<>();
 
         // coordinates for face
@@ -326,11 +313,11 @@ public class ISEA3H {
         double yMax = (d > 0) ? this._triangleB : this._triangleC;
 
         // lower maximum values for face if possible
-        double buffer = this._2l;
-        if (latMinFace < lat0) yMin = Math.min(yMin, fcLat0.getY() - buffer);
-        if (latMaxFace > lat1) yMax = Math.max(yMax, fcLat1.getY() + buffer);
-        if (fcLon0 != null) xMin = Math.min(xMin, fcLon0.getX() - buffer);
-        if (fcLon1 != null) xMax = Math.max(xMax, fcLon1.getX() + buffer);
+        double buffer = this._4l;
+        if (latMinFace < lat0) yMin = Math.max(yMin, fcLat0.getY() - buffer);
+        if (latMaxFace > lat1) yMax = Math.min(yMax, fcLat1.getY() + buffer);
+        if (fcLon0 != null) xMin = Math.max(xMin, fcLon0.getX() - buffer);
+        if (fcLon1 != null) xMax = Math.min(xMax, fcLon1.getX() + buffer);
 
         // compute cells
         Tuple<Integer, Integer> fcMinN = this._integerForFaceCoordinates(this.cellForLocation(new FaceCoordinates(face, xMin, yMin)));
@@ -341,7 +328,7 @@ public class ISEA3H {
                 FaceCoordinates fc = this._getCoordinatesOfCenter(face, nx, ny);
                 if (this._isCoordinatesInFace(fc)) {
                     GeoCoordinates gc = this._projection.icosahedronToSphere(fc);
-                    if (lat0Untransformed - buffer2 <= gc.getLat() && gc.getLat() <= lat1Untransformed + buffer2 && lon0Untransformed - buffer2 <= gc.getLon() && gc.getLon() <= lon1Untransformed + buffer2) cells.add(this._newGridCell(gc, fc));
+                    if (this._isInside(gc, lat0Untransformed, lat1Untransformed, lon0Untransformed, lon1Untransformed, buffer2)) cells.add(this._newGridCell(gc, fc));
                 }
             }
         }
