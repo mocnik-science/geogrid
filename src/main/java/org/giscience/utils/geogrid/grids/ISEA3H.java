@@ -228,7 +228,8 @@ public class ISEA3H {
 
         // compute cells
         List<GridCell> cells = new ArrayList<>();
-        for (FourTuple<Double, Double, Double, Double> bbox : this._projection._changeOrientation(lat0, lat1, lon0, lon1)) cells.addAll(this._cellsForBound0(bbox._1, bbox._2, bbox._3, bbox._4, lat0, lat1, lon0, lon1));
+        if (this._resolution <= 3) return this._cellsForBound0(-90, 90, -180, 180, -90, 90, -180, 180);
+        else for (FourTuple<Double, Double, Double, Double> bbox : this._projection._changeOrientation(lat0, lat1, lon0, lon1)) cells.addAll(this._cellsForBound0(bbox._1, bbox._2, bbox._3, bbox._4, lat0, lat1, lon0, lon1));
         return cells;
     }
 
@@ -278,6 +279,7 @@ public class ISEA3H {
         else if (lonMaxFace < lon0 && lonMinFace > lon1) return cells;
 
         // face coordinates of bbox (only longitude)
+        double buffer = this._4l;
         double d = this._projection.faceOrientation(face);
         double latFace = this._projection.getLat(face);
         double lonFace = this._projection.getLon(face);
@@ -289,7 +291,7 @@ public class ISEA3H {
         double m = (latMaxFace - latMinFace) / (lonMaxFace - lonMinFace2);
         FaceCoordinates fcLon0 = null;
         FaceCoordinates fcLon1 = null;
-        if (lonMinFace < lon0) {
+        if (lonMinFace < lon0 - buffer) {
             double latToUse;
             if (latFace > 0 && d > 0) latToUse = (lon0 < lonFace) ? Math.max(latMinFace, lat0) : Math.min(latMaxFace, lat1);
             else if (latFace > 0 && d < 0) latToUse = (lon0 < lonFace) ? Math.min(latMaxFace - m * (lon02 - lonMinFace2), lat1) : Math.min(latMaxFace, lat1);
@@ -297,7 +299,7 @@ public class ISEA3H {
             else latToUse = (lon0 < lonFace) ? Math.min(latMaxFace, lat1) : Math.max(latMinFace, lat0);
             fcLon0 = this._projection._sphereToPlanesOfTheFacesOfTheIcosahedronWithoutOrientation(face, new GeoCoordinates(latToUse, lon0));
         }
-        if (lonMaxFace > lon1) {
+        if (lonMaxFace > lon1 + buffer) {
             double latToUse;
             if (latFace > 0 && d > 0) latToUse = (lon1 < lonFace) ? Math.min(latMaxFace, lat1) : Math.max(latMinFace, lat0);
             else if (latFace > 0 && d < 0) latToUse = (lon1 < lonFace) ? Math.min(latMaxFace, lat1) : Math.max(latMinFace + m * (lon12 - lonMinFace2), lat0);
@@ -313,9 +315,8 @@ public class ISEA3H {
         double yMax = (d > 0) ? this._triangleB : this._triangleC;
 
         // lower maximum values for face if possible
-        double buffer = this._4l;
-        if (latMinFace < lat0) yMin = Math.max(yMin, fcLat0.getY() - buffer);
-        if (latMaxFace > lat1) yMax = Math.min(yMax, fcLat1.getY() + buffer);
+        if (latMinFace < lat0 - buffer) yMin = Math.max(yMin, fcLat0.getY() - buffer);
+        if (latMaxFace > lat1 + buffer) yMax = Math.min(yMax, fcLat1.getY() + buffer);
         if (fcLon0 != null) xMin = Math.max(xMin, fcLon0.getX() - buffer);
         if (fcLon1 != null) xMax = Math.min(xMax, fcLon1.getX() + buffer);
 
