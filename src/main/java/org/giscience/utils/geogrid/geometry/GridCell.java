@@ -34,7 +34,7 @@ public class GridCell implements Comparable<GridCell> {
         if (resolution < 0 || resolution > 18) throw new Exception("resolution must be between 0 and 18");
         this._resolution = resolution;
         if (lat < -90 || lat > 90) throw new Exception("invalid latitude");
-        if (lat <= -90 + this._precisionPerDefinition || lat >= 90 - this._precisionPerDefinition) lon = 0;
+        if (lat < -90 + this._precisionPerDefinition || lat > 90 - this._precisionPerDefinition) lon = 0;
         lon = lon % 360;
         if (lon > 180) lon -= 360;
         else if (lon < -180) lon += 360;
@@ -73,7 +73,8 @@ public class GridCell implements Comparable<GridCell> {
      *     degrees is strictly less than .5e-6, the respective sign is always regarded as being positive.</li>
      *     <li>The consecutive digits consist of the latitude, with two pre-decimal and six decimal places.</li>
      *     <li>The consecutive digits consist of the longitude, with three pre-decimal and six decimal places. The
-     *     longitude is per definition 0 if the latitude differs from -90 or 90 degrees by only .5e-6 or less.</li>
+     *     longitude is per definition 0 if the latitude differs from -90 or 90 degrees by strictly less than
+     *     .5e-6.</li>
      * </ul>
      *
      * The id is only valid for resolution smaller less or equal 18.
