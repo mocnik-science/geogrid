@@ -69,7 +69,7 @@ public class ISEAProjection {
     private final double _b = .860; // b
     // face constants
     private final double __E; // E
-    private final double __F = Trigonometric.atan(1 / (2 * Math.pow(this._goldenRatio, 2))); // F = \atan(1 / (2 \phi)) where \phi = (1 + \sqrt{5}) / 2 is the golden ratio; needs some thinking to derive
+    private final double __F = Trigonometric.atan(1 / (2 * Math.pow(this._goldenRatio, 2))); // F = \atan(1 / (2 \phi^2)) where \phi = (1 + \sqrt{5}) / 2 is the golden ratio; needs some thinking to derive
     // alternative computation F = 90 + g - 2 * \atan(\phi); formula can easily be derived from the cartesian coordinates of the vertices of the icosahedron
     private final double __G; // G // this value incorporates R', and not R, as is stated wrongly in the paper by Snyder
     private final int __X = 36; // half the difference in latitude between two horizontally adjacent faces
