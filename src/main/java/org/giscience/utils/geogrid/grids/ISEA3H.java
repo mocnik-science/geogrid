@@ -18,7 +18,6 @@ package org.giscience.utils.geogrid.grids;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
-import org.giscience.utils.geogrid.generic.FourTuple;
 import org.giscience.utils.geogrid.generic.Tuple;
 import org.giscience.utils.geogrid.geo.WGS84;
 import org.giscience.utils.geogrid.geometry.FaceCoordinates;
@@ -67,7 +66,11 @@ public class ISEA3H {
     private final double _triangleBCA; // (_triangleB + _triangleC) / _triangleA
 
     public ISEA3H(int resolution) {
-        this._projection.setOrientationSymmetricEquator();
+        this(resolution, true);
+    }
+
+    public ISEA3H(int resolution, boolean rotatedProjection) {
+        if (rotatedProjection) this._projection.setOrientationSymmetricEquator();
         this._resolution = resolution - 1;
         int numberOfHexagonCells = 1;
         for (int i = 0; i < this._resolution; i++) numberOfHexagonCells = 3 * numberOfHexagonCells + 1;
@@ -162,28 +165,54 @@ public class ISEA3H {
     public FaceCoordinates cellForLocation(FaceCoordinates c) throws Exception {
         double x = (this._coordinatesNotSwapped()) ? c.getX() : c.getY();
         double y = (this._coordinatesNotSwapped()) ? c.getY() : c.getX();
-        double nxCenter = Math.round(x / (this._l2));
+        int nxCenter = (int) Math.round(x / this._l2);
         double xCenter = nxCenter * this._l2;
         if (Math.abs(x - xCenter) <= this._l6) {
-            double nyCenter12;
-            double yCenter12;
-            if (nxCenter % 2 == 0) {
-                nyCenter12 = Math.round(y / this._inverseSqrt3l);
-                yCenter12 = nyCenter12 * this._inverseSqrt3l;
-            } else {
-                nyCenter12 = Math.round((y - this._inverseSqrt3l2) / this._inverseSqrt3l);
-                yCenter12 = nyCenter12 * this._inverseSqrt3l + this._inverseSqrt3l2;
-            }
+            int nyCenter12 = (int) Math.round((((nxCenter % 2 == 0) ? y : y - this._inverseSqrt3l2)) / this._inverseSqrt3l);
+            double yCenter12 = (nyCenter12 + ((nxCenter % 2 == 0) ? 0 : .5)) * this._inverseSqrt3l;
             return this._faceCoordinatesSwapByResolution(c.getFace(), xCenter, yCenter12);
         }
         else {
-            double nyCenter1 = Math.round(y / this._inverseSqrt3l);
+            int nyCenter1 = (int) Math.round(y / this._inverseSqrt3l);
             double yCenter1 = nyCenter1 * this._inverseSqrt3l;
-            double nyCenter2 = Math.round((y - this._inverseSqrt3l2) / this._inverseSqrt3l);
+            int nyCenter2 = (int) Math.round((y - this._inverseSqrt3l2) / this._inverseSqrt3l);
             double yCenter2 = nyCenter2 * this._inverseSqrt3l + this._inverseSqrt3l2;
             FaceCoordinates cCandidate1 = this._faceCoordinatesSwapByResolution(c.getFace(), xCenter, (nxCenter % 2 == 0) ? yCenter1 : yCenter2);
             FaceCoordinates cCandidate2 = this._faceCoordinatesSwapByResolution(c.getFace(), (x > xCenter) ? xCenter + this._l2 : xCenter - this._l2, (nxCenter % 2 != 0) ? yCenter1 : yCenter2);
             return (c.distanceTo(cCandidate1) < c.distanceTo(cCandidate2)) ? cCandidate1 : cCandidate2;
+        }
+    }
+
+    /**
+     * The following equality holds: cellForLocation = _getCoordinatesOfCenter . _integerForFaceCoordinates
+     *
+     * However, the function cellForLocation is defined separately to speed up computations.
+     *
+     * @param face face to compute the coordinates on
+     * @param nx steps into the direction of the vertex of the hexagon
+     * @param ny steps into the direction of the edge of the hexagon
+     * @return coordinates on the face
+     */
+    private FaceCoordinates _getCoordinatesOfCenter(int face, int nx, int ny) {
+        double x = nx * this._l2;
+        double y = (ny + ((nx % 2 == 0) ? 0 : .5)) * this._inverseSqrt3l;
+        return this._faceCoordinatesSwapByResolution(face, x, y);
+    }
+
+    private Tuple<Integer, Integer> _integerForFaceCoordinates(FaceCoordinates c) {
+        double x = (this._coordinatesNotSwapped()) ? c.getX() : c.getY();
+        double y = (this._coordinatesNotSwapped()) ? c.getY() : c.getX();
+        int nxCenter = (int) Math.round(x / this._l2);
+        double xCenter = nxCenter * this._l2;
+        if (Math.abs(x - xCenter) <= this._l6) return new Tuple(nxCenter, (int) Math.round((((nxCenter % 2 == 0) ? y : y - this._inverseSqrt3l2)) / this._inverseSqrt3l));
+        else {
+            int nyCenter1 = (int) Math.round(y / this._inverseSqrt3l);
+            double yCenter1 = nyCenter1 * this._inverseSqrt3l;
+            int nyCenter2 = (int) Math.round((y - this._inverseSqrt3l2) / this._inverseSqrt3l);
+            double yCenter2 = nyCenter2 * this._inverseSqrt3l + this._inverseSqrt3l2;
+            FaceCoordinates cCandidate1 = this._faceCoordinatesSwapByResolution(c.getFace(), xCenter, (nxCenter % 2 == 0) ? yCenter1 : yCenter2);
+            FaceCoordinates cCandidate2 = this._faceCoordinatesSwapByResolution(c.getFace(), (x > xCenter) ? xCenter + this._l2 : xCenter - this._l2, (nxCenter % 2 != 0) ? yCenter1 : yCenter2);
+            return (c.distanceTo(cCandidate1) < c.distanceTo(cCandidate2)) ? new Tuple(nxCenter, (nxCenter % 2 == 0) ? nyCenter1 : nyCenter2) : new Tuple((x > xCenter) ? nxCenter + 1 : nxCenter - 1, (nxCenter % 2 != 0) ? nyCenter1 : nyCenter2);
         }
     }
 
@@ -213,138 +242,78 @@ public class ISEA3H {
      * @return cells inside the bounds
      */
     public Collection<GridCell> cellsForBound(double lat0, double lat1, double lon0, double lon1) throws Exception {
-        // normalize longitude
-        if (lon1 - lon0 >= 360) {
-            lon0 = -180;
-            lon1 = 180;
-        } else {
-            lon0 %= 360;
-            lon1 %= 360;
-            lon0 -= 360;
-            lon1 -= 360;
-            while (lon0 < -180) lon0 += 360;
-            while (lon1 < -180) lon1 += 360;
-        }
-
-        // compute cells
-        List<GridCell> cells = new ArrayList<>();
-        if (this._resolution <= 3) return this._cellsForBound0(-90, 90, -180, 180, -90, 90, -180, 180);
-        else for (FourTuple<Double, Double, Double, Double> bbox : this._projection._changeOrientation(lat0, lat1, lon0, lon1)) cells.addAll(this._cellsForBound0(bbox._1, bbox._2, bbox._3, bbox._4, lat0, lat1, lon0, lon1));
-        return cells;
+        // compute center of bounding box
+        double lat = (lat0 + lat1) / 2.;
+        double lon = (lon0 + lon1 + ((lon0 <= lon1) ? 0 : 360)) / 2.;
+        if (lon > 360) lon -= 360;
+        FaceCoordinates fc = this._projection.sphereToIcosahedron(new GeoCoordinates(lat, lon));
+        // compute
+        return _cellsForBound(new ResultCellForBound(), fc, lat0, lat1, lon0, lon1).cells;
     }
 
-    private boolean _isInside(GeoCoordinates c, double lat0, double lat1, double lon0, double lon1, double buffer) {
-        boolean bLat = lat0 - buffer <= c.getLat() && c.getLat() <= lat1 + buffer;
-        boolean bLon = (lon0 <= lon1) ? lon0 - buffer <= c.getLon() && c.getLon() <= lon1 + buffer : lon1 - buffer < c.getLon() || c.getLon() < lon0 + buffer;
-        return bLat && bLon;
-    }
-
-    private Set<GridCell> _cellsForBound0(double lat0, double lat1, double lon0, double lon1, double lat0Untransformed, double lat1Untransformed, double lon0Untransformed, double lon1Untransformed) throws Exception {
-        Set<GridCell> cells = new HashSet<>();
-        if (lat0 <= lat1 && lon0 <= lon1) {
-            cells = this._cellsForBound1(lat0, lat1, lon0, lon1, lat0Untransformed, lat1Untransformed, lon0Untransformed, lon1Untransformed);
-        } else if (lat0 > lat1 && lon0 <= lon1) {
-            cells.addAll(this._cellsForBound1(lat0, 90, lon0, lon1, lat0Untransformed, lat1Untransformed, lon0Untransformed, lon1Untransformed));
-            cells.addAll(this._cellsForBound1(-90, lat1, lon0, lon1, lat0Untransformed, lat1Untransformed, lon0Untransformed, lon1Untransformed));
-        } else if (lat0 <= lat1 && lon0 > lon1) {
-            cells.addAll(this._cellsForBound1(lat0, lat1, lon0, 180, lat0Untransformed, lat1Untransformed, lon0Untransformed, lon1Untransformed));
-            cells.addAll(this._cellsForBound1(lat0, lat1, -180, lon1, lat0Untransformed, lat1Untransformed, lon0Untransformed, lon1Untransformed));
-        } else {
-            cells.addAll(this._cellsForBound1(lat0, 90, lon0, 180, lat0Untransformed, lat1Untransformed, lon0Untransformed, lon1Untransformed));
-            cells.addAll(this._cellsForBound1(lat0, 90, -180, lon1, lat0Untransformed, lat1Untransformed, lon0Untransformed, lon1Untransformed));
-            cells.addAll(this._cellsForBound1(-90, lat1, lon0, 180, lat0Untransformed, lat1Untransformed, lon0Untransformed, lon1Untransformed));
-            cells.addAll(this._cellsForBound1(-90, lat1, -180, lon1, lat0Untransformed, lat1Untransformed, lon0Untransformed, lon1Untransformed));
-        }
-        return cells;
-    }
-
-    private Set<GridCell> _cellsForBound1(double lat0, double lat1, double lon0, double lon1, double lat0Untransformed, double lat1Untransformed, double lon0Untransformed, double lon1Untransformed) throws Exception {
-        Set<GridCell> cells = new HashSet<>();
-        for (int f = 0; f < this._projection.numberOfFaces(); f++) cells.addAll(this._cellsForBound2(f, lat0, lat1, lon0, lon1, lat0Untransformed, lat1Untransformed, lon0Untransformed, lon1Untransformed));
-        return cells;
-    }
-
-    private Set<GridCell> _cellsForBound2(int face, double lat0, double lat1, double lon0, double lon1, double lat0Untransformed, double lat1Untransformed, double lon0Untransformed, double lon1Untransformed) throws Exception {
-        Set<GridCell> cells = new HashSet<>();
-
-        // coordinates for face
-        double latMinFace = this._projection.getLatMin(face);
-        double latMaxFace = this._projection.getLatMax(face);
-        double lonMinFace = this._projection.getLonMin(face);
-        double lonMaxFace = this._projection.getLonMax(face);
-
-        // check whether bbox intersects face
-        if (latMaxFace < lat0 || latMinFace > lat1) return cells;
-        if (lonMinFace < lonMaxFace) if (lonMaxFace < lon0 || lonMinFace > lon1) return cells;
-        else if (lonMaxFace < lon0 && lonMinFace > lon1) return cells;
-
-        // face coordinates of bbox (only longitude)
-        double buffer = this._4l;
-        double d = this._projection.faceOrientation(face);
-        double latFace = this._projection.getLat(face);
-        double lonFace = this._projection.getLon(face);
-        FaceCoordinates fcLat0 = this._projection._sphereToPlanesOfTheFacesOfTheIcosahedronWithoutOrientation(face, new GeoCoordinates(lat0, (lat0 > 0) ? lonFace : lonMinFace));
-        FaceCoordinates fcLat1 = this._projection._sphereToPlanesOfTheFacesOfTheIcosahedronWithoutOrientation(face, new GeoCoordinates(lat1, (lat0 > 0) ? lonMinFace : lonFace));
-        double lonMinFace2 = lonMinFace + ((lonMinFace <= lonMaxFace) ? 0 : -360);
-        double lon02 = lon0 + ((lon0 <= lonMaxFace) ? 0 : -360);
-        double lon12 = lon1 + ((lon1 <= lonMaxFace) ? 0 : -360);
-        double m = (latMaxFace - latMinFace) / (lonMaxFace - lonMinFace2);
-        FaceCoordinates fcLon0 = null;
-        FaceCoordinates fcLon1 = null;
-        if (lonMinFace < lon0 - buffer) {
-            double latToUse;
-            if (latFace > 0 && d > 0) latToUse = (lon0 < lonFace) ? Math.max(latMinFace, lat0) : Math.min(latMaxFace, lat1);
-            else if (latFace > 0 && d < 0) latToUse = (lon0 < lonFace) ? Math.min(latMaxFace - m * (lon02 - lonMinFace2), lat1) : Math.min(latMaxFace, lat1);
-            else if (latFace < 0 && d > 0) latToUse = (lon0 < lonFace) ? Math.max(latMinFace + m * (lon02 - lonMinFace2), lat0) : Math.max(latMinFace, lat0);
-            else latToUse = (lon0 < lonFace) ? Math.min(latMaxFace, lat1) : Math.max(latMinFace, lat0);
-            fcLon0 = this._projection._sphereToPlanesOfTheFacesOfTheIcosahedronWithoutOrientation(face, new GeoCoordinates(latToUse, lon0));
-        }
-        if (lonMaxFace > lon1 + buffer) {
-            double latToUse;
-            if (latFace > 0 && d > 0) latToUse = (lon1 < lonFace) ? Math.min(latMaxFace, lat1) : Math.max(latMinFace, lat0);
-            else if (latFace > 0 && d < 0) latToUse = (lon1 < lonFace) ? Math.min(latMaxFace, lat1) : Math.max(latMinFace + m * (lon12 - lonMinFace2), lat0);
-            else if (latFace < 0 && d > 0) latToUse = (lon1 < lonFace) ? Math.max(latMinFace, lat0) : Math.min(latMaxFace - m * (lon12 - lonMinFace2), lat1);
-            else latToUse = (lon1 < lonFace) ? Math.max(latMinFace, lat0) : Math.min(latMaxFace, lat1);
-            fcLon1 = this._projection._sphereToPlanesOfTheFacesOfTheIcosahedronWithoutOrientation(face, new GeoCoordinates(latToUse, lon1));
-        }
-
-        // maximum values for face
-        double xMin = -this._triangleA;
-        double xMax = this._triangleA;
-        double yMin = (d > 0) ? -this._triangleC : -this._triangleB;
-        double yMax = (d > 0) ? this._triangleB : this._triangleC;
-
-        // lower maximum values for face if possible
-        if (latMinFace < lat0 - buffer) yMin = Math.max(yMin, fcLat0.getY() - buffer);
-        if (latMaxFace > lat1 + buffer) yMax = Math.min(yMax, fcLat1.getY() + buffer);
-        if (fcLon0 != null) xMin = Math.max(xMin, fcLon0.getX() - buffer);
-        if (fcLon1 != null) xMax = Math.min(xMax, fcLon1.getX() + buffer);
-
-        // compute cells
-        Tuple<Integer, Integer> fcMinN = this._integerForFaceCoordinates(this.cellForLocation(new FaceCoordinates(face, xMin, yMin)));
-        Tuple<Integer, Integer> fcMaxN = this._integerForFaceCoordinates(this.cellForLocation(new FaceCoordinates(face, xMax, yMax)));
-        Double buffer2 = this._bufferEstimator(face, Math.round((fcMaxN._1 - fcMinN._1) / 2), Math.round((fcMaxN._2 - fcMinN._2) / 2));
-        for (int nx = fcMinN._1 - 1; nx <= fcMaxN._1 + 1; nx++) {
-            for (int ny = fcMinN._2 - 1; ny <= fcMaxN._2 + 1; ny++) {
-                FaceCoordinates fc = this._getCoordinatesOfCenter(face, nx, ny);
-                if (this._isCoordinatesInFace(fc)) {
-                    GeoCoordinates gc = this._projection.icosahedronToSphere(fc);
-                    if (this._isInside(gc, lat0Untransformed, lat1Untransformed, lon0Untransformed, lon1Untransformed, buffer2)) cells.add(this._newGridCell(gc, fc));
+    private ResultCellForBound _cellsForBound(ResultCellForBound result, FaceCoordinates fcStart, double lat0, double lat1, double lon0, double lon1) throws Exception {
+        // if fcStart is already in result, skip the computation
+        if (result.visitedCells.contains(fcStart.getFace())) return result;
+        result.visitedCells.add(fcStart.getFace());
+        // prepare dNs
+        List<Tuple<Integer, Integer>> dNs = new ArrayList<>();
+        dNs.add(new Tuple<>(1, 1));
+        dNs.add(new Tuple<>(-1, 1));
+        dNs.add(new Tuple<>(1, -1));
+        dNs.add(new Tuple<>(-1, -1));
+        // compute
+        Tuple<Integer, Integer> fcn = this._integerForFaceCoordinates(fcStart);
+        for (Tuple<Integer, Integer> dN : dNs) {
+            FaceCoordinates fc = null;
+            GeoCoordinates gc = null;
+            Set<Integer> success = new HashSet();
+            Set<Integer> successLast;
+            boolean hasFoundInside;
+            Map<Integer, FaceCoordinates> faceTodo = new HashMap();
+            int nx = fcn._1 - dN._1;
+            while (true) {
+                nx += dN._1;
+                int ny = fcn._2 - dN._2;
+                successLast = success;
+                Integer maxMinValue = (!successLast.isEmpty()) ? ((dN._2 >= 0) ? Collections.max(successLast) : Collections.min(successLast)) : null;
+                success = new HashSet<>();
+                hasFoundInside = false;
+                while (true) {
+                    ny += dN._2;
+                    fc = this._getCoordinatesOfCenter(fcStart.getFace(), nx, ny);
+                    gc = this._projection.icosahedronToSphere(fc);
+                    if (this._isInside(gc, lat0, lat1, lon0, lon1)) hasFoundInside = true;
+                    else if (hasFoundInside || maxMinValue == null || ((dN._2 >= 0) ? ny > maxMinValue : ny < maxMinValue)) break;
+                    else continue;
+                    if (this._isCoordinatesInFace(fc)) {
+                        success.add(ny);
+                        result.cells.add(this._newGridCell(gc, fc));
+                    } else {
+                        FaceCoordinates fc2 = this._projection.sphereToIcosahedron(gc);
+                        if (faceTodo.containsKey(fc2.getFace())) faceTodo.put(fc2.getFace(), fc2);
+                        else {
+                            int sizeBefore = result.cells.size();
+                            result = this._cellsForBound(result, fc2, lat0, lat1, lon0, lon1);
+                            if (result.cells.size() != sizeBefore) faceTodo.put(fc2.getFace(), null);
+                        }
+                    }
                 }
+                if (success.isEmpty()) break;
             }
+            for (Map.Entry<Integer, FaceCoordinates> e : faceTodo.entrySet()) if (e.getValue() != null && !result.cells.contains(this.cellForLocation(this._projection.icosahedronToSphere(e.getValue())))) result = this._cellsForBound(result, e.getValue(), lat0, lat1, lon0, lon1);
         }
-
-        return cells;
+        return result;
     }
 
-    private Double _bufferEstimator(int face, int nx, int ny) throws Exception {
-        GeoCoordinates x = this._projection.icosahedronToSphere(this._getCoordinatesOfCenter(face, nx, ny));
-        GeoCoordinates y0 = this._projection.icosahedronToSphere(this._getCoordinatesOfCenter(face, nx + 1, ny));
-        GeoCoordinates y1 = this._projection.icosahedronToSphere(this._getCoordinatesOfCenter(face, nx, ny + 1));
-        double d0 = Math.pow(x.getLat() - y0.getLat(), 2) + Math.pow(x.getLon() - y0.getLon(), 2);
-        double d1 = Math.pow(x.getLat() - y1.getLat(), 2) + Math.pow(x.getLon() - y1.getLon(), 2);
-        double d = (d0 > d1) ? Math.sqrt(d0) : Math.sqrt(d1);
-        return 2 * d;
+    private class ResultCellForBound {
+        Set<GridCell> cells = new HashSet();
+        Set<Integer> visitedCells = new HashSet();
+    }
+
+    private boolean _isInside(GeoCoordinates c, double lat0, double lat1, double lon0, double lon1) {
+        boolean bLat = lat0 <= c.getLat() && c.getLat() <= lat1;
+        boolean bLon = (lon0 <= lon1) ? lon0 <= c.getLon() && c.getLon() <= lon1 : lon0 < c.getLon() || c.getLon() < lon1;
+        return bLat && bLon;
     }
 
     private GridCell _newGridCell(GeoCoordinates gc, FaceCoordinates fc) throws Exception {
@@ -378,35 +347,13 @@ public class ISEA3H {
         return l.stream().max(Double::compareTo).get();
     }
 
-    /**
-     * @param face face to compute the coordinates on
-     * @param nx steps into the direction of the vertex of the hexagon
-     * @param ny steps into the direction of the edge of the hexagon
-     * @return coordinates on the face
-     */
-    private FaceCoordinates _getCoordinatesOfCenter(int face, int nx, int ny) {
-        double x = nx * this._l2;
-        double y = (ny + ((nx % 2 == 0) ? 0 : .5)) * this._inverseSqrt3l;
-        return this._faceCoordinatesSwapByResolution(face, x, y);
-    }
-
-    private Tuple<Integer, Integer> _integerForFaceCoordinates(FaceCoordinates c) {
-        double x = (this._coordinatesNotSwapped()) ? c.getX() : c.getY();
-        double y = (this._coordinatesNotSwapped()) ? c.getY() : c.getX();
-        int nx = (int)Math.round(x / this._l2);
-        int ny = (int)Math.round(y / this._inverseSqrt3l - ((nx % 2 == 0) ? 0 : .5));
-        return new Tuple(nx, ny);
-    }
-
-    private boolean _isCoordinatesInFace(FaceCoordinates fc) {
-        int d = this._projection.faceOrientation(fc);
-        double x = fc.getX();
-        double y = fc.getY();
+    private boolean _isCoordinatesInFace(FaceCoordinates c) {
+        int d = this._projection.faceOrientation(c);
 
         // test whether coordinate is left of the triangle, right of the triangle, or below the triangle
-        if (d * y > x * this._triangleBCA + this._triangleB + this._precision) return false;
-        if (d * y > -x * this._triangleBCA + this._triangleB + this._precision) return false;
-        if (d * y < -this._triangleC - this._precision) return false;
+        if (d * c.getY() > c.getX() * this._triangleBCA + this._triangleB + this._precision) return false;
+        if (d * c.getY() > -c.getX() * this._triangleBCA + this._triangleB + this._precision) return false;
+        if (d * c.getY() < -this._triangleC - this._precision) return false;
 
         return true;
     }
