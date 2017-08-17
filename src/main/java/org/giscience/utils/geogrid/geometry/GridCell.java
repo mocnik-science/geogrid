@@ -69,12 +69,12 @@ public class GridCell implements Comparable<GridCell> {
      *     <li>The leading sign is positive in case of a hexagon, and negative in case of a pentagon.</li>
      *     <li>This first two digits consist of the resolution incremented by 20 in case of negative latitude, by 40 in
      *     case of negative longitude, and by 60 in case of negative latitude and longitude. In case that the
-     *     latitude/longitude is strictly less than .5e-6, or that the difference of latitude/longitude to 180 or -180
-     *     degrees is strictly less than .5e-6, the respective sign is always regarded as being positive.</li>
+     *     latitude/longitude is strictly less than .5e-6, or that the difference of longitude to 180 or -180 degrees is
+     *     strictly less than .5e-6, the respective sign is always regarded as being positive.</li>
      *     <li>The consecutive digits consist of the latitude, with two pre-decimal and six decimal places.</li>
      *     <li>The consecutive digits consist of the longitude, with three pre-decimal and six decimal places. The
      *     longitude is per definition 0 if the latitude differs from -90 or 90 degrees by strictly less than
-     *     .5e-6.</li>
+     *     .5e-6. The longitude is expected to be greater than -180 and strictly less than 180 degrees.</li>
      * </ul>
      *
      * The id is only valid for resolution smaller less or equal 18.
@@ -83,8 +83,8 @@ public class GridCell implements Comparable<GridCell> {
      */
     public Long getId() {
         if (this._id == null) {
-            long sgnLat = (this._lat < 0 && Math.abs(this._lat) >= this._precisionPerDefinition && this._lat > -180 + this._precisionPerDefinition) ? 20 : 0;
-            long sgnLon = (this._lon < 0 && Math.abs(this._lon) >= this._precisionPerDefinition && this._lon > -180 + this._precisionPerDefinition) ? 40 : 0;
+            long sgnLat = (this._lat < 0 && Math.abs(this._lat) >= this._precisionPerDefinition) ? 20 : 0;
+            long sgnLon = (this._lon < 0 && Math.abs(this._lon) >= this._precisionPerDefinition && 180 - Math.abs(this._lon) >= this._precisionPerDefinition) ? 40 : 0;
             this._id = (this._isPentagon ? -1 : 1) * ((this._resolution.longValue() + sgnLat + sgnLon) * (long) 1e17 + Math.abs(Math.round(this._lat * 1e6)) * (long) 1e9 + Math.abs(Math.round(this._lon * 1e6)));
         }
         return this._id;
