@@ -178,7 +178,7 @@ public class ISEAProjection {
      * of the icosahedron. The equator is thus mapped symmetrically.
      */
     public void setOrientationSymmetricEquator() {
-        this.setOrientation((90 + this.__E) / 2., 36.);
+        this.setOrientation((this.__E + this.__F) / 2., -11.25);
     }
 
     /**
