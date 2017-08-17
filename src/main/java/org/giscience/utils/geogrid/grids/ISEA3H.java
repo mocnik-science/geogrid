@@ -91,41 +91,41 @@ public class ISEA3H {
     }
 
     /**
-     * @return diameter of a hexagon cell
+     * @return diameter of a hexagonal cell
      */
     public double diameterOfHexagonCellOnIcosahedron() {
         return this._l23;
     }
 
     /**
-     * Returns the area of a hexagon cell. The cells should all have the same area by construction, because the ISEA
+     * Returns the area of a hexagonal cell. The cells should all have the same area by construction, because the ISEA
      * projection is equal-area.
      *
-     * @return area of a hexagon cell
+     * @return area of a hexagonal cell
      */
     public double areaOfHexagonCell() {
         return WGS84.areaOfEarth / (this._numberOfHexagonCells + 5 / 6. * this._numberOfPentagonCells);
     }
 
     /**
-     * Returns the area of a pentagon cell. The cells should all have the same area by construction, because the ISEA
+     * Returns the area of a pentagonal cell. The cells should all have the same area by construction, because the ISEA
      * projection is equal-area.
      *
-     * @return area of a pentagoncell
+     * @return area of a pentagonal cell
      */
     public double areaOfPentagonCell() {
         return 5 / 6. * this.areaOfHexagonCell();
     }
 
     /**
-     * @return number of hexagon cells
+     * @return number of hexagonal cells
      */
     public int numberOfHexagonCells() {
         return this._numberOfHexagonCells;
     }
 
     /**
-     * @return number of pentagon cells
+     * @return number of pentagonal cells
      */
     public int numberOfPentagonCells() {
         return this._numberOfPentagonCells;
