@@ -31,9 +31,9 @@ import java.util.*;
  * ISEA Aperture 3 Hexagon (ISEA3H) Discrete Global Grid System (DGGS)
  *
  * The ISEA3H grid is constructed by using the icosahedron Snyder equal-area (ISEA) projection to map the surface of the
- * Earth to the icosahedron. Thereby, the orientation of the icosahedron is chosen such that the north and the south
+ * globe to the icosahedron. Thereby, the orientation of the icosahedron is chosen such that the north and the south
  * poles are mapped to the edge midpoints of the icosahedron. The equator is thus mapped symmetrically. A grid
- * (aperture 3) is constructed on the icosahedron, and this grid is mapped back by the inverse projection to the Earth.
+ * (aperture 3) is constructed on the icosahedron, and this grid is mapped back by the inverse projection to the globe.
  *
  * The cells of the grid are identified by the resolution and their center points.
  *
