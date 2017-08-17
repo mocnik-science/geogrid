@@ -16,7 +16,6 @@
  */
 package org.giscience.utils.geogrid.projections;
 
-import org.giscience.utils.geogrid.generic.FourTuple;
 import org.giscience.utils.geogrid.geo.WGS84;
 import org.giscience.utils.geogrid.geometry.GeoCoordinates;
 import org.giscience.utils.geogrid.geometry.FaceCoordinates;
@@ -203,53 +202,6 @@ public class ISEAProjection {
         return new GeoCoordinates(lat2, lon2);
     }
 
-    public double getOrientationLat() {
-        return this._orientationLat;
-    }
-
-    private FourTuple<Double, Double, Double, Double> _changeOrientation0(double lat0, double lat1, double lon0, double lon1) throws Exception {
-        if (lon1 - lon0 >= 360 && lat1 - lat0 >= 180) return new FourTuple<>(-90., 90., -180., 180.);
-
-        // change the orientation of the coordinates
-        GeoCoordinates gc00 = this._changeOrientation(new GeoCoordinates(lat0, lon0));
-        GeoCoordinates gc10 = this._changeOrientation(new GeoCoordinates(lat1, lon0));
-        GeoCoordinates gc01 = this._changeOrientation(new GeoCoordinates(lat0, lon1));
-        GeoCoordinates gc11 = this._changeOrientation(new GeoCoordinates(lat1, lon1));
-        GeoCoordinates gcMid0 = this._changeOrientation(new GeoCoordinates((lat0 + lat1) / 2, lon0));
-        GeoCoordinates gcMid1 = this._changeOrientation(new GeoCoordinates((lat0 + lat1) / 2, lon1));
-
-        double latMin = Math.min(gcMid0.getLat(), Math.min(gcMid1.getLat(), Math.min(gc00.getLat(), Math.min(gc10.getLat(), Math.min(gc01.getLat(), gc11.getLat())))));
-        double latMax = Math.max(gcMid0.getLat(), Math.max(gcMid1.getLat(), Math.max(gc00.getLat(), Math.max(gc10.getLat(), Math.max(gc01.getLat(), gc11.getLat())))));
-        double lonMin = Math.min(gc00.getLon(), Math.min(gc10.getLon(), Math.min(gc01.getLon(), gc11.getLon())));
-        double lonMax = Math.max(gc00.getLon(), Math.max(gc10.getLon(), Math.max(gc01.getLon(), gc11.getLon())));
-
-        // check whether poles are involved
-        double lonMostCentral = 0;
-        if (lonMin * lonMax > 0) lonMostCentral = Math.min(Math.abs(lonMin), Math.abs(lonMax));
-        boolean exceedsPositive = this._changeOrientationSinLatitude(lat0, lonMostCentral) < 0 && 0 < this._changeOrientationSinLatitude(lat1, lonMostCentral);
-        boolean exceedsNegative = this._changeOrientationSinLatitude(lat1, lonMostCentral) < 0 && 0 < this._changeOrientationSinLatitude(lat0, lonMostCentral);
-
-        // return new bbox
-        if (exceedsPositive && exceedsNegative) return new FourTuple<>(-90., 90., -180., 180.);
-        if (exceedsPositive) return new FourTuple<>(latMin, 90., -180., 180.);
-        if (exceedsNegative) return new FourTuple<>(-90., latMax, -180., 180.);
-        return new FourTuple<>(latMin, latMax, lonMin, lonMax);
-    }
-
-    private double _changeOrientationSinLatitude(double lat0, double lonMostCentral) {
-        return Trigonometric.sin(lat0) * Trigonometric.cos(this._orientationLat) + Trigonometric.cos(lonMostCentral + this._orientationLon) * Trigonometric.cos(lat0) * Trigonometric.sin(this._orientationLat);
-    }
-
-    public List<FourTuple<Double, Double, Double, Double>> _changeOrientation(double lat0, double lat1, double lon0, double lon1) throws Exception {
-        List<FourTuple<Double, Double, Double, Double>> result = new ArrayList<>();
-        if (lon0 <= lon1) result.add(this._changeOrientation0(lat0, lat1, lon0, lon1));
-        else {
-            result.add(this._changeOrientation0(lat0, lat1, lon0, 180));
-            result.add(this._changeOrientation0(lat0, lat1, -180, lon1));
-        }
-        return result;
-    }
-
     /**
      * Only for internal use!
      * Inverse of _changeOrientation
@@ -315,40 +267,7 @@ public class ISEAProjection {
      * @throws Exception
      */
     public FaceCoordinates sphereToIcosahedron(GeoCoordinates c) throws Exception {
-        c = this._changeOrientation(c);
-        Face face = this._sphereToFace(c);
-        return this.sphereToFace(c, face);
-    }
-
-    /**
-     * Converts geographic coordinates to the coordinate system of a plane which contains a face of the icosahedron.
-     *
-     * <b>CAUTION</b>: This function should only be used very rarely.  It generates coordinates which may not lay on the
-     * faces themselves but only on the planes of the faces.  In case the given face equals the one that the given
-     * coordinates would be projected to, the coordinates coincide.
-     *
-     * This function is useful for computing the overlap of bounding boxes or areas and a given face.
-     *
-     * @param c geographic coordinates
-     * @return coordinates on the plane of the faces of the icosahedron
-     * @throws Exception
-     */
-    public FaceCoordinates sphereToPlanesOfTheFacesOfTheIcosahedron(int face, GeoCoordinates c) throws Exception {
-        c = this._changeOrientation(c);
-        return this.sphereToFace(c, new Face(face, this, c));
-    }
-
-    /**
-     * Only for internal use!
-     * Same as sphereToPlanesOfTheFacesOfTheIcosahedron, but without changing the orientation of the coordinates.
-     *
-     * @param face
-     * @param c
-     * @return
-     * @throws Exception
-     */
-    public FaceCoordinates _sphereToPlanesOfTheFacesOfTheIcosahedronWithoutOrientation(int face, GeoCoordinates c) throws Exception {
-        return this.sphereToFace(c, new Face(face, this, c));
+        return this._sphereToIcosahedron(this._changeOrientation(c));
     }
 
     /**
@@ -359,76 +278,127 @@ public class ISEAProjection {
      * @throws Exception
      */
     public GeoCoordinates icosahedronToSphere(FaceCoordinates c) throws Exception {
-        GeoCoordinates c2 = this._faceToSphere(c);
-        return this._revertOrientation(c2);
+        return this._revertOrientation(this._icosahedronToSphere(c));
     }
 
-    private FaceCoordinates sphereToFace(GeoCoordinates c, Face face) {
-        double Az_earth = Trigonometric.atan2(face.cosLat() * face.sinLonLon0(), face.cosLat0() * face.sinLat() - face.sinLat0() * face.cosLat() * face.cosLonLon0()); // Az
-        double AzAdjustment = (this.faceOrientation(face.getFace()) > 0) ? 0 : 180;
-        Az_earth += AzAdjustment;
-        while (Az_earth < 0) {
-            AzAdjustment += this._AzMax;
-            Az_earth += this._AzMax;
+    private FaceCoordinates _sphereToIcosahedron(GeoCoordinates c) {
+        double sinLat = Trigonometric.sin(c.getLat());
+        double cosLat = Trigonometric.cos(c.getLat());
+        for (int face : this._guessFace(c)) {
+            double lat0 = this.getLat(face);
+            double lon0 = this.getLon(face);
+            double sinLat0 = Trigonometric.sin(lat0);
+            double cosLat0 = Trigonometric.cos(lat0);
+            double sinLonLon0 = Trigonometric.sin(c.getLon() - lon0 );
+            double cosLonLon0 = Trigonometric.cos(c.getLon() - lon0 );
+            double Az_earth = Trigonometric.atan2(cosLat * sinLonLon0, cosLat0 * sinLat - sinLat0 * cosLat * cosLonLon0); // Az
+            double AzAdjustment = (this.faceOrientation(face) > 0) ? 0 : 180;
+            Az_earth += AzAdjustment;
+            while (Az_earth < 0) {
+                AzAdjustment += this._AzMax;
+                Az_earth += this._AzMax;
+            }
+            while (Az_earth > this._AzMax) {
+                AzAdjustment -= this._AzMax;
+                Az_earth -= this._AzMax;
+            }
+            double sinAz_earth = Trigonometric.sin(Az_earth); // \sin Az
+            double cosAz_earth = Trigonometric.cos(Az_earth); // \cos Az
+            double z = Trigonometric.acos(sinLat0 * sinLat + cosLat0 * cosLat * cosLonLon0); // z
+            double q = Trigonometric.atan2(this._tan_g,  cosAz_earth + sinAz_earth * this._cotTheta); // q
+            if (z > q + this._precision) continue;
+            double H = this._compute_H(sinAz_earth, cosAz_earth); // H
+            double area = (Az_earth + this._G_180 + H) * this._pi_R_earth2_180; // A_G and A_{ABD}
+            double Az = Trigonometric.atan2(2 * area, this._R_tan_g_2 - area * this._2cotTheta); // Az'
+            double sinAz = Trigonometric.sin(Az); // \sin Az'
+            double cosAz = Trigonometric.cos(Az); // \cos Az'
+            double f = this._compute_f(sinAz, cosAz, sinAz_earth, cosAz_earth); // f
+            double rho = this._2R * f * Trigonometric.sin(z / 2.); // \rho
+            Az -= AzAdjustment;
+            double x = rho * Trigonometric.sin(Az); // x
+            double y = rho * Trigonometric.cos(Az); // y
+            return new FaceCoordinates(face, x, y);
         }
-        while (Az_earth > this._AzMax) {
-            AzAdjustment -= this._AzMax;
-            Az_earth -= this._AzMax;
-        }
-        double sinAz_earth = Trigonometric.sin(Az_earth); // \sin Az
-        double cosAz_earth = Trigonometric.cos(Az_earth); // \cos Az
-        double H = this._compute_H(sinAz_earth, cosAz_earth); // H
-        double area = (Az_earth + this._G_180 + H) * this._pi_R_earth2_180; // A_G and A_{ABD}
-        double Az = Trigonometric.atan2(2 * area, this._R_tan_g_2 - area * this._2cotTheta); // Az'
-        double sinAz = Trigonometric.sin(Az); // \sin Az'
-        double cosAz = Trigonometric.cos(Az); // \cos Az'
-        double f = this._compute_f(sinAz, cosAz, sinAz_earth, cosAz_earth); // f
-        double rho = this._2R * f * Trigonometric.sin(face.z() / 2.); // \rho
-        Az -= AzAdjustment;
-        double x = rho * Trigonometric.sin(Az); // x
-        double y = rho * Trigonometric.cos(Az); // y
-        return new FaceCoordinates(face.getFace(), x, y);
+        return null;
     }
 
-    /**
-     * Returns the corresponding face for given coordinates
-     *
-     * @param c coordinates
-     * @return face that the coordinates belongs to
-     */
-    public int sphereToFace(GeoCoordinates c) {
-        return this._sphereToFace(c).getFace();
-    }
-
-    private Face _sphereToFace(GeoCoordinates c) {
+    private List<Integer> _guessFace(GeoCoordinates c) {
+        List<Integer> result = new ArrayList<>();
         if (c.getLat() > this.__EF) {
-            if (c.getLon() < -108) return new Face(0, this, c);
-            else if (c.getLon() < -36) return new Face(1, this, c);
-            else if (c.getLon() < 36) return new Face(2, this, c);
-            else if (c.getLon() < 108) return new Face(3, this, c);
-            else return new Face(4, this, c);
+            if (c.getLon() < -108) {
+                result.add(0);
+                result.add(5);
+            } else if (c.getLon() < -36) {
+                result.add(1);
+                result.add(6);
+            } else if (c.getLon() < 36) {
+                result.add(2);
+                result.add(7);
+            } else if (c.getLon() < 108) {
+                result.add(3);
+                result.add(8);
+            } else {
+                result.add(4);
+                result.add(9);
+            }
         } else if (c.getLat() < -this.__EF) {
-            if (c.getLon() < -144) return new Face(19, this, c);
-            else if (c.getLon() < -72) return new Face(15, this, c);
-            else if (c.getLon() < 0) return new Face(16, this, c);
-            else if (c.getLon() < 72) return new Face(17, this, c);
-            else if (c.getLon() < 144) return new Face(18, this, c);
-            else return new Face(19, this, c);
+            if (c.getLon() < -144) {
+                result.add(19);
+                result.add(14);
+            } else if (c.getLon() < -72) {
+                result.add(15);
+                result.add(10);
+            } else if (c.getLon() < 0) {
+                result.add(16);
+                result.add(11);
+            } else if (c.getLon() < 72) {
+                result.add(17);
+                result.add(12);
+            } else if (c.getLon() < 144) {
+                result.add(18);
+                result.add(13);
+            } else {
+                result.add(19);
+                result.add(14);
+            }
         } else {
-            if (c.getLon() < -144) return this._sphereToFaceTestFaces(c, 5, 14);
-            else if (c.getLon() < -108) return this._sphereToFaceTestFaces(c, 5, 10);
-            else if (c.getLon() < -72) return this._sphereToFaceTestFaces(c, 6, 10);
-            else if (c.getLon() < -36) return this._sphereToFaceTestFaces(c, 6, 11);
-            else if (c.getLon() < 0) return this._sphereToFaceTestFaces(c, 7, 11);
-            else if (c.getLon() < 36) return this._sphereToFaceTestFaces(c, 7, 12);
-            else if (c.getLon() < 72) return this._sphereToFaceTestFaces(c, 8, 12);
-            else if (c.getLon() < 108) return this._sphereToFaceTestFaces(c, 8, 13);
-            else if (c.getLon() < 144) return this._sphereToFaceTestFaces(c, 9, 13);
-            return this._sphereToFaceTestFaces(c, 9, 14);
+            if (c.getLon() < -144) {
+                result.add(5);
+                result.add(14);
+            } else if (c.getLon() < -108) {
+                result.add(5);
+                result.add(10);
+            } else if (c.getLon() < -72) {
+                result.add(6);
+                result.add(10);
+            } else if (c.getLon() < -36) {
+                result.add(6);
+                result.add(11);
+            } else if (c.getLon() < 0) {
+                result.add(7);
+                result.add(11);
+            } else if (c.getLon() < 36) {
+                result.add(7);
+                result.add(12);
+            } else if (c.getLon() < 72) {
+                result.add(8);
+                result.add(12);
+            } else if (c.getLon() < 108) {
+                result.add(8);
+                result.add(13);
+            } else if (c.getLon() < 144) {
+                result.add(9);
+                result.add(13);
+            } else {
+                result.add(9);
+                result.add(14);
+            }
         }
+        for (int f = 0; f < this._numberOfFaces; f++) result.add(f);
+        return result;
     }
 
-    private GeoCoordinates _faceToSphere(FaceCoordinates c) throws Exception {
+    private GeoCoordinates _icosahedronToSphere(FaceCoordinates c) throws Exception {
         double Az = Trigonometric.atan2(c.getX(), c.getY()); // Az'
         double rho = Math.sqrt(Math.pow(c.getX(), 2) + Math.pow(c.getY(), 2)); // \rho
         double AzAdjustment = (this.faceOrientation(c) > 0) ? 0 : 180;
@@ -470,21 +440,6 @@ public class ISEAProjection {
     }
 
     /**
-     * Tests whether coordinates c belong to face1 or face2. Assumes that the coordinates c belongs to one of these
-     * faces.
-     *
-     * @param c
-     * @param face1
-     * @param face2
-     * @return
-     */
-    private Face _sphereToFaceTestFaces(GeoCoordinates c, int face1, int face2) {
-        Face f1 = new Face(face1, this, c);
-        Face f2 = new Face(face2, this, c);
-        return (f1.z() <= f2.z()) ? f1 : f2;
-    }
-
-    /**
      * Returns orientation of a face.
      *
      * @param fc
@@ -517,12 +472,6 @@ public class ISEAProjection {
         return Trigonometric.atan2(this._tan_g, (cosAz_earth + sinAz_earth * this._cotTheta)); // q
     }
 
-    private double _getLat(Face f) {
-        return this.getLat(f.getFace());
-    }
-    private double _getLon(Face f) {
-        return this.getLon(f.getFace());
-    }
     private double _getLat(FaceCoordinates c) {
         return this.getLat(c.getFace());
     }
@@ -548,113 +497,5 @@ public class ISEAProjection {
      */
     public double getLon(int face) {
         return this.__lons[face];
-    }
-
-    /**
-     * Returns minimium latitude of the given face
-     *
-     * @param face
-     * @return
-     */
-    public double getLatMin(int face) {
-        int d = this.faceOrientation(face);
-        return (d > 0) ? this._getLatMin(face, d) : this._getLatMax(face, d);
-    }
-
-    /**
-     * Returns maximum latitude of the given face
-     *
-     * @param face
-     * @return
-     */
-    public double getLatMax(int face) {
-        int d = this.faceOrientation(face);
-        return (d > 0) ? this._getLatMax(face, d) : this._getLatMin(face, d);
-    }
-
-    private double _getLatMin(int face, int upright) {
-        return this.getLat(face) - upright * (this.__E + this.__F - this._g);
-    }
-    private double _getLatMax(int face, int upright) {
-        double lat = this.getLat(face) + upright * this._g;
-        if (lat > 90) lat = 90;
-        if (lat < -90) lat = -90;
-        return lat;
-    }
-
-    /**
-     * Returns minimium longitude of the given face
-     *
-     * @param face
-     * @return
-     */
-    public double getLonMin(int face) {
-        double lon = this.getLon(face) - this.__X;
-        if (lon < -180) lon += 360;
-        return lon;
-    }
-
-    /**
-     * Returns maximum longitude of the given face
-     *
-     * @param face
-     * @return
-     */
-    public double getLonMax(int face) {
-        double lon = this.getLon(face) + this.__X;
-        if (lon > 180) lon -= 360;
-        return lon;
-    }
-
-    private class Face {
-        private final int _face;
-        private final ISEAProjection _iseaProjection;
-        private final GeoCoordinates _c;
-        private Double _z = null;
-        private Double _sinLat = null;
-        private Double _cosLat = null;
-        private Double _sinLat0 = null;
-        private Double _cosLat0 = null;
-        private Double _sinLonLon0 = null;
-        private Double _cosLonLon0 = null;
-
-        public Face(int face, ISEAProjection iseaProjection, GeoCoordinates c) {
-            this._face = face;
-            this._iseaProjection = iseaProjection;
-            this._c = c;
-        }
-
-        public int getFace() {
-            return this._face;
-        }
-
-        protected double z() {
-            if (this._z == null) this._z = Trigonometric.acos(this.sinLat0() * this.sinLat() + this.cosLat0() * this.cosLat() * this.cosLonLon0());
-            return this._z;
-        }
-        protected double sinLat() {
-            if (this._sinLat == null) this._sinLat = Trigonometric.sin(this._c.getLat());
-            return this._sinLat;
-        }
-        protected double cosLat() {
-            if (this._cosLat == null) this._cosLat = Trigonometric.cos(this._c.getLat());
-            return this._cosLat;
-        }
-        protected double sinLat0() {
-            if (this._sinLat0 == null) this._sinLat0 = Trigonometric.sin(this._iseaProjection._getLat(this));
-            return this._sinLat0;
-        }
-        protected double cosLat0() {
-            if (this._cosLat0 == null) this._cosLat0 = Trigonometric.cos(this._iseaProjection._getLat(this));
-            return this._cosLat0;
-        }
-        protected double sinLonLon0() {
-            if (this._sinLonLon0 == null) this._sinLonLon0 = Trigonometric.sin(this._c.getLon() - this._iseaProjection._getLon(this));
-            return this._sinLonLon0;
-        }
-        protected double cosLonLon0() {
-            if (this._cosLonLon0 == null) this._cosLonLon0 = Trigonometric.cos(this._c.getLon() - this._iseaProjection._getLon(this));
-            return this._cosLonLon0;
-        }
     }
 }
