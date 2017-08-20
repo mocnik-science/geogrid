@@ -53,7 +53,6 @@ public class ISEA3H {
     private final double _l0; // length of the triangle base at resolution 0
     private final double _inverseSqrt3l0; // 1 / \sqrt{3} * l_0
     private final double _l; // length of the triangle base at the given resolution
-    private final double _4l; // 4 * l
     private final double _l2; // l / 2
     private final double _l6; // l / 6
     private final double _l23; // l * 2 / 3
@@ -78,7 +77,6 @@ public class ISEA3H {
         this._l0 = this._projection.lengthOfTriangleBase();
         this._inverseSqrt3l0 = this._inverseSqrt3 * this._l0;
         this._l = Math.pow(this._inverseSqrt3, this._resolution) * this._l0;
-        this._4l = 4 * this._l;
         this._l2 = this._l / 2.;
         this._l6 = this._l / 6.;
         this._l23 = this._l * 2 / 3.;
