@@ -167,7 +167,7 @@ public class ISEA3H {
         double xCenter = nxCenter * this._l2;
         if (Math.abs(x - xCenter) <= this._l6) {
             int nyCenter12 = (int) Math.round((((nxCenter % 2 == 0) ? y : y - this._inverseSqrt3l2)) / this._inverseSqrt3l);
-            double yCenter12 = (nyCenter12 + ((nxCenter % 2 == 0) ? 0 : .5)) * this._inverseSqrt3l;
+            double yCenter12 = nyCenter12 * this._inverseSqrt3l + ((nxCenter % 2 == 0) ? 0 : this._inverseSqrt3l2);
             return this._faceCoordinatesSwapByResolution(c.getFace(), xCenter, yCenter12);
         }
         else {
