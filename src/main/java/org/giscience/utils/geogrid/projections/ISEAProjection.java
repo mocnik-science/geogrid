@@ -51,7 +51,7 @@ public class ISEAProjection {
     // constants
     private final double _goldenRatio = (1 + Math.sqrt(5)) / 2.;
     // radius
-    private final double _RR_earth; // R' / R
+    private final double _RR_earth = (1 / (2 * Math.sqrt(5)) + 1 / 6.) * Math.sqrt(Math.PI * Math.sqrt(3)); // R' / R
     private final double _R; // R'
     private final double _R_earth = WGS84.radiusAuthalic; // R // authalic sphere radius for WGS84 [km]
     // faces
@@ -94,7 +94,6 @@ public class ISEAProjection {
     public ISEAProjection() {
         // computations
         this._g = this.__F + 2 * Trigonometric.atan(this._goldenRatio) - 90;
-        this._RR_earth = Math.sqrt((this._G - this._theta) * Math.PI / (45 * Trigonometric.sin(2 * this._theta))) / Trigonometric.tan(this._g);
         this._R = this._RR_earth * this._R_earth;
         this.__E = 90 - this._g;
         this.__G = this._R * Trigonometric.tan(this._g) * Math.sqrt(3) / 2.;
