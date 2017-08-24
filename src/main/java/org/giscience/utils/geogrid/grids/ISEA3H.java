@@ -48,7 +48,7 @@ public class ISEA3H {
     private final double _precision = 1e-9;
     private final ISEAProjection _projection = new ISEAProjection();
     private final int _resolution; // resolution - 1
-    private final int _numberOfHexagonCells;
+    private final long _numberOfHexagonCells;
     private final int _numberOfPentagonCells = 12;
     private final double _l0; // length of the triangle base at resolution 0
     private final double _inverseSqrt3l0; // 1 / \sqrt{3} * l_0
@@ -71,7 +71,7 @@ public class ISEA3H {
     public ISEA3H(int resolution, boolean rotatedProjection) {
         if (rotatedProjection) this._projection.setOrientationSymmetricEquator();
         this._resolution = resolution - 1;
-        int numberOfHexagonCells = 1;
+        long numberOfHexagonCells = 1;
         for (int i = 0; i < this._resolution; i++) numberOfHexagonCells = 3 * numberOfHexagonCells + 1;
         this._numberOfHexagonCells = 20 * numberOfHexagonCells;
         this._l0 = this._projection.lengthOfTriangleBase();
@@ -118,7 +118,7 @@ public class ISEA3H {
     /**
      * @return number of hexagonal cells
      */
-    public int numberOfHexagonCells() {
+    public long numberOfHexagonCells() {
         return this._numberOfHexagonCells;
     }
 
