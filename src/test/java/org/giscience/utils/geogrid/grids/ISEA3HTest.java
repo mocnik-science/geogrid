@@ -53,7 +53,7 @@ public class ISEA3HTest {
     }
     public void _numberOfCellsByArea(int resolution) {
         ISEA3H grid = new ISEA3H(resolution);
-        assertTrue(grid.numberOfHexagonCells() * grid.areaOfHexagonCell() + grid.numberOfPentagonCells() * grid.areaOfPentagonCell() - WGS84.areaOfEarth < WGS84.areaOfEarth * this._precision2);
+        assertTrue(grid.numberOfHexagonCells() * grid.areaOfAHexagonCell() + grid.numberOfPentagonCells() * grid.areaOfAPentagonCell() - WGS84.areaOfEarth < WGS84.areaOfEarth * this._precision2);
     }
 
     @Test

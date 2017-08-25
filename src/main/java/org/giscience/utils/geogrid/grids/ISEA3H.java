@@ -89,10 +89,24 @@ public class ISEA3H {
     }
 
     /**
-     * @return diameter of a hexagonal cell
+     * @return diameter of a hexagonal cell on the icosahedron
      */
     public double diameterOfHexagonCellOnIcosahedron() {
         return this._l23;
+    }
+
+    /**
+     * @return length of a side of a hexagonal cell on the icosahedron
+     */
+    public double lengthOfASideOfHexagonCellOnIcosahedron() {
+        return this._l / 3;
+    }
+
+    /**
+     * @return lower bound for the length of a side of a hexagonal cell on the sphere
+     */
+    public double lowerBoundForLengthOfASideOfHexagonCellOnSphere() {
+        return this._projection.sphericalDistanceFromCenterToVerticesOnSphere() * WGS84.radiusAuthalic * 2 * Math.PI / (360 * Math.sqrt(Math.pow(3, this._resolution) * 5));
     }
 
     /**
@@ -101,7 +115,7 @@ public class ISEA3H {
      *
      * @return area of a hexagonal cell
      */
-    public double areaOfHexagonCell() {
+    public double areaOfAHexagonCell() {
         return WGS84.areaOfEarth / (this._numberOfHexagonCells + 5 / 6. * this._numberOfPentagonCells);
     }
 
@@ -111,8 +125,8 @@ public class ISEA3H {
      *
      * @return area of a pentagonal cell
      */
-    public double areaOfPentagonCell() {
-        return 5 / 6. * this.areaOfHexagonCell();
+    public double areaOfAPentagonCell() {
+        return 5 / 6. * this.areaOfAHexagonCell();
     }
 
     /**

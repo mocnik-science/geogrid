@@ -148,6 +148,13 @@ public class ISEAProjection {
     }
 
     /**
+     * @return spherical distance from center of a face to any of its vertices on the sphere; in degrees
+     */
+    public double sphericalDistanceFromCenterToVerticesOnSphere() {
+        return this._g;
+    }
+
+    /**
      * @return number of faces of the icosahedron
      */
     public int numberOfFaces() {
