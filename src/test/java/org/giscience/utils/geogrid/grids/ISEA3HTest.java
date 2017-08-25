@@ -61,10 +61,11 @@ public class ISEA3HTest {
         for (int r = 1; r < 13; r++) this._numberOfCellsByGrid(r);
     }
     public void _numberOfCellsByGrid(int resolution) throws Exception {
-        System.out.println(resolution);
         ISEA3H grid = new ISEA3H(resolution);
-        System.out.println(grid.cellsForBound(-90, 90, -180, 180).size() + " " + (grid.numberOfHexagonCells() + grid.numberOfPentagonCells()));
-        assertEquals(grid.cellsForBound(-90, 90, -180, 180).size(), grid.numberOfHexagonCells() + grid.numberOfPentagonCells());
+        long cells = grid.cellsForBound(-90, 90, -180, 180).size();
+        long cellsExpected = grid.numberOfHexagonCells() + grid.numberOfPentagonCells();
+        System.out.format("resolution %d - %d - %d\n", resolution, cells, cellsExpected);
+        assertEquals(cells, cellsExpected);
     }
 
     @Test
