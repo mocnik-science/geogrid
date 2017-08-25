@@ -198,7 +198,7 @@ public class ISEA3H {
     /**
      * The following equality holds: cellForLocation = _getCoordinatesOfCenter . _integerForFaceCoordinates
      *
-     * However, the function cellForLocation is defined separately to speed up computations.
+     * However, the method cellForLocation is defined separately to speed up computations.
      *
      * @param face face to compute the coordinates on
      * @param nx steps into the direction of the vertex of the hexagon
@@ -254,16 +254,35 @@ public class ISEA3H {
      * @return cells inside the bounds
      */
     public Collection<GridCell> cellsForBound(double lat0, double lat1, double lon0, double lon1) throws Exception {
+        return _cellsForBound(new CellAggregatorByCells(), lat0, lat1, lon0, lon1).cellAggregator.getCells();
+    }
+
+    /**
+     * Returns cell ids that are inside the bounds, or at least very near.
+     *
+     * Same as cellsForBound, apart that this method returns only ids and is much more memory efficient.
+     *
+     * @param lat0
+     * @param lat1
+     * @param lon0
+     * @param lon1
+     * @return ids of cells inside the bounds
+     */
+    public Collection<Long> cellIdsForBound(double lat0, double lat1, double lon0, double lon1) throws Exception {
+        return _cellsForBound(new CellAggregatorByCellIds(), lat0, lat1, lon0, lon1).cellAggregator.getCellIds();
+    }
+
+    public <T extends CellAggregator> ResultCellForBound<T> _cellsForBound(T ca, double lat0, double lat1, double lon0, double lon1) throws Exception {
         // compute center of bounding box
         double lat = (lat0 + lat1) / 2.;
         double lon = (lon0 + lon1 + ((lon0 <= lon1) ? 0 : 360)) / 2.;
         if (lon > 360) lon -= 360;
         FaceCoordinates fc = this._projection.sphereToIcosahedron(new GeoCoordinates(lat, lon));
         // compute
-        return _cellsForBound(new ResultCellForBound(), fc, lat0, lat1, lon0, lon1).cells;
+        return _cellsForBound(new ResultCellForBound<>(ca), fc, lat0, lat1, lon0, lon1);
     }
 
-    private ResultCellForBound _cellsForBound(ResultCellForBound result, FaceCoordinates fcStart, double lat0, double lat1, double lon0, double lon1) throws Exception {
+    private <T extends CellAggregator> ResultCellForBound<T> _cellsForBound(ResultCellForBound<T> result, FaceCoordinates fcStart, double lat0, double lat1, double lon0, double lon1) throws Exception {
         // if fcStart is already in result, skip the computation
         if (result.visitedCells.contains(fcStart.getFace())) return result;
         result.visitedCells.add(fcStart.getFace());
@@ -299,27 +318,83 @@ public class ISEA3H {
                     else continue;
                     if (this._isCoordinatesInFace(fc)) {
                         success.add(ny);
-                        result.cells.add(this._newGridCell(gc, fc));
+                        result.cellAggregator.add(this._newGridCell(gc, fc));
                     } else {
                         FaceCoordinates fc2 = this._projection.sphereToIcosahedron(gc);
                         if (faceTodo.containsKey(fc2.getFace())) faceTodo.put(fc2.getFace(), fc2);
                         else {
-                            int sizeBefore = result.cells.size();
+                            int sizeBefore = result.cellAggregator.size();
                             result = this._cellsForBound(result, fc2, lat0, lat1, lon0, lon1);
-                            if (result.cells.size() != sizeBefore) faceTodo.put(fc2.getFace(), null);
+                            if (result.cellAggregator.size() != sizeBefore) faceTodo.put(fc2.getFace(), null);
                         }
                     }
                 }
                 if (success.isEmpty()) break;
             }
-            for (Map.Entry<Integer, FaceCoordinates> e : faceTodo.entrySet()) if (e.getValue() != null && !result.cells.contains(this.cellForLocation(this._projection.icosahedronToSphere(e.getValue())))) result = this._cellsForBound(result, e.getValue(), lat0, lat1, lon0, lon1);
+            for (Map.Entry<Integer, FaceCoordinates> e : faceTodo.entrySet()) if (e.getValue() != null && !result.cellAggregator.contains(this.cellForLocation(this._projection.icosahedronToSphere(e.getValue())))) result = this._cellsForBound(result, e.getValue(), lat0, lat1, lon0, lon1);
         }
         return result;
     }
 
-    private class ResultCellForBound {
-        Set<GridCell> cells = new HashSet();
-        Set<Integer> visitedCells = new HashSet();
+    private class ResultCellForBound<T extends CellAggregator> {
+        public T cellAggregator;
+        public Set<Integer> visitedCells = new HashSet();
+
+        public ResultCellForBound(T cellAggregator) {
+            this.cellAggregator = cellAggregator;
+        }
+    }
+
+    private abstract class CellAggregator {
+        public abstract void add(GridCell gc);
+        public abstract int size();
+        public abstract boolean contains(GridCell gc);
+    }
+
+    private class CellAggregatorByCells extends CellAggregator {
+        private Set<GridCell> _cells = new HashSet();
+
+        @Override
+        public void add(GridCell gc) {
+            this._cells.add(gc);
+        }
+
+        @Override
+        public int size() {
+            return this._cells.size();
+        }
+
+        @Override
+        public boolean contains(GridCell gc) {
+            return this._cells.contains(gc);
+        }
+
+        public Set<GridCell> getCells() {
+            return this._cells;
+        }
+    }
+
+    private class CellAggregatorByCellIds extends CellAggregator {
+        private Set<Long> _cells = new HashSet();
+
+        @Override
+        public void add(GridCell gc) {
+            this._cells.add(gc.getId());
+        }
+
+        @Override
+        public int size() {
+            return this._cells.size();
+        }
+
+        @Override
+        public boolean contains(GridCell gc) {
+            return this._cells.contains(gc);
+        }
+
+        public Set<Long> getCellIds() {
+            return this._cells;
+        }
     }
 
     private boolean _isInside(GeoCoordinates c, double lat0, double lat1, double lon0, double lon1) {
