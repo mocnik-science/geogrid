@@ -68,19 +68,10 @@ public class ISEA3HTest {
     }
 
     @Test
-    public void pointsInGridCells1() throws Exception {
+    public void pointsInGridCells() throws Exception {
         this._pointsInGridCells(1);
-    }
-    @Test
-    public void pointsInGridCells12() throws Exception {
         this._pointsInGridCells(12);
-    }
-    @Test
-    public void pointsInGridCells13() throws Exception {
         this._pointsInGridCells(13);
-    }
-    @Test
-    public void pointsInGridCells16() throws Exception {
         this._pointsInGridCells(16);
     }
     private void _pointsInGridCells(int resolution) throws Exception {
