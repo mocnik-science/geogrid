@@ -26,6 +26,10 @@ import org.giscience.utils.geogrid.geometry.GridCell;
 import org.giscience.utils.geogrid.projections.ISEAProjection;
 
 import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * ISEA Aperture 3 Hexagon (ISEA3H) Discrete Global Grid System (DGGS)
@@ -54,6 +58,7 @@ public class ISEA3H {
     private final double _inverseSqrt3l0; // 1 / \sqrt{3} * l_0
     private final double _l; // length of the triangle base at the given resolution
     private final double _l2; // l / 2
+    private final double _l3; // l / 3
     private final double _l6; // l / 6
     private final double _l23; // l * 2 / 3
     private final double _inverseSqrt3 = 1 / Math.sqrt(3); // 1 / \sqrt{3}
@@ -63,6 +68,7 @@ public class ISEA3H {
     private final double _triangleB; // 1/\sqrt{3} * l_0 // distance center point to tip
     private final double _triangleC; // 1/(2 \sqrt{3}) * l_0 // distance base to center point
     private final double _triangleBCA; // (_triangleB + _triangleC) / _triangleA
+    private int _numberOfThreads = 8;
 
     public ISEA3H(int resolution) {
         this(resolution, true);
@@ -78,6 +84,7 @@ public class ISEA3H {
         this._inverseSqrt3l0 = this._inverseSqrt3 * this._l0;
         this._l = Math.pow(this._inverseSqrt3, this._resolution) * this._l0;
         this._l2 = this._l / 2.;
+        this._l3 = this._l / 3.;
         this._l6 = this._l / 6.;
         this._l23 = this._l * 2 / 3.;
         this._inverseSqrt3l = this._inverseSqrt3 * this._l;
@@ -86,6 +93,26 @@ public class ISEA3H {
         this._triangleB = this._inverseSqrt3l0;
         this._triangleC = this._inverseSqrt3l0 / 2.;
         this._triangleBCA = (this._triangleB + this._triangleC) / this._triangleA;
+    }
+
+    /**
+     * Set the number of threads.
+     *
+     * By default, 8 threads are used.
+     *
+     * @param n
+     */
+    public void setNumberOfThreads(int n) {
+        this._numberOfThreads = n;
+    };
+
+    /**
+     * Get the number of threads.
+     *
+     * @return
+     */
+    public int getNumberOfThreads() {
+        return this._numberOfThreads;
     }
 
     /**
@@ -211,6 +238,12 @@ public class ISEA3H {
         return this._faceCoordinatesSwapByResolution(face, x, y);
     }
 
+    private FaceCoordinates _getCoordinatesOfCenter2(int face, int nx, int ny, int orientation) {
+        double x = nx * this._l2;
+        double y = (ny - orientation * ((nx % 2 == 0) ? 0 : .5)) * this._inverseSqrt3l;
+        return this._faceCoordinatesSwapByResolution(face, x, y);
+    }
+
     private Tuple<Integer, Integer> _integerForFaceCoordinates(FaceCoordinates c) {
         double x = (this._coordinatesNotSwapped()) ? c.getX() : c.getY();
         double y = (this._coordinatesNotSwapped()) ? c.getY() : c.getX();
@@ -241,6 +274,26 @@ public class ISEA3H {
     }
 
     /**
+     * Returns all cells.
+     *
+     * @return cells
+     */
+    public Collection<GridCell> cells() throws Exception {
+        return this.cellsForBound(-90, 90, -180, 180);
+    }
+
+    /**
+     * Returns cell ids.
+     *
+     * Same as cells, apart that this method returns only ids and is much more memory efficient.
+     *
+     * @return ids of cells
+     */
+    public Collection<Long> cellIds() throws Exception {
+        return this.cellIdsForBound(-90, 90, -180, 180);
+    }
+
+    /**
      * Returns cells that are inside the bounds, or at least very near.
      *
      * Note that the result should, in fact, include all cells whose center points are inside the given bounds, but also
@@ -254,7 +307,8 @@ public class ISEA3H {
      * @return cells inside the bounds
      */
     public Collection<GridCell> cellsForBound(double lat0, double lat1, double lon0, double lon1) throws Exception {
-        return _cellsForBound(new CellAggregatorByCells(), lat0, lat1, lon0, lon1).cellAggregator.getCells();
+        if (lat1 - lat0 >= 180 && lon1 - lon0 >= 360) return this._cells(new CellAggregatorByCells()).getCells();
+        else return this._cellsForBound(new CellAggregatorByCells(), lat0, lat1, lon0, lon1).cellAggregator.getCells();
     }
 
     /**
@@ -269,10 +323,11 @@ public class ISEA3H {
      * @return ids of cells inside the bounds
      */
     public Collection<Long> cellIdsForBound(double lat0, double lat1, double lon0, double lon1) throws Exception {
-        return _cellsForBound(new CellAggregatorByCellIds(), lat0, lat1, lon0, lon1).cellAggregator.getCellIds();
+        if (lat1 - lat0 >= 180 && lon1 - lon0 >= 360) return this._cells(new CellAggregatorByCellIds()).getCellIds();
+        else return this._cellsForBound(new CellAggregatorByCellIds(), lat0, lat1, lon0, lon1).cellAggregator.getCellIds();
     }
 
-    public <T extends CellAggregator> ResultCellForBound<T> _cellsForBound(T ca, double lat0, double lat1, double lon0, double lon1) throws Exception {
+    private <T extends CellAggregator> ResultCellForBound<T> _cellsForBound(T ca, double lat0, double lat1, double lon0, double lon1) throws Exception {
         // compute center of bounding box
         double lat = (lat0 + lat1) / 2.;
         double lon = (lon0 + lon1 + ((lon0 <= lon1) ? 0 : 360)) / 2.;
@@ -282,21 +337,52 @@ public class ISEA3H {
         return _cellsForBound(new ResultCellForBound<>(ca), fc, lat0, lat1, lon0, lon1);
     }
 
+    private <T extends CellAggregator> T _cells(T ca) throws Exception {
+        ISEA3H t = this;
+        ExecutorService executor = Executors.newFixedThreadPool(this._numberOfThreads);
+        List<Future<T>> futureList = new ArrayList<>();
+        for (int face = 0; face < this._projection.numberOfFaces(); face++) {
+            final int f = face;
+            futureList.add(executor.submit(new Callable<T>() {
+                public T call() throws Exception {
+                    return t._cellsForFace(new ResultCellForBound<T>((T) ca.cloneEmpty()), f).cellAggregator;
+                }
+            }));
+        }
+        for (Future<T> future : futureList) ca.addAll(future.get());
+        executor.shutdown();
+        return ca;
+    }
+
     private <T extends CellAggregator> ResultCellForBound<T> _cellsForBound(ResultCellForBound<T> result, FaceCoordinates fcStart, double lat0, double lat1, double lon0, double lon1) throws Exception {
         // if fcStart is already in result, skip the computation
         if (result.visitedCells.contains(fcStart.getFace())) return result;
         result.visitedCells.add(fcStart.getFace());
+
         // prepare dNs
         List<Tuple<Integer, Integer>> dNs = new ArrayList<>();
-        dNs.add(new Tuple<>(1, 1));
-        dNs.add(new Tuple<>(-1, 1));
-        dNs.add(new Tuple<>(1, -1));
-        dNs.add(new Tuple<>(-1, -1));
-        // compute
+        dNs.add(new Tuple(1, 1));
+        dNs.add(new Tuple(-1, 1));
+        dNs.add(new Tuple(1, -1));
+        dNs.add(new Tuple(-1, -1));
+
+        // compute starting coordinates
         Tuple<Integer, Integer> fcn = this._integerForFaceCoordinates(fcStart);
+        if (!this._isCoordinatesInFace(this._getCoordinatesOfCenter(fcStart.getFace(), fcn._1, fcn._2))) {
+            if (this._isCoordinatesInFace(this._getCoordinatesOfCenter(fcStart.getFace(), fcn._1 - 1, fcn._2))) fcn = new Tuple(fcn._1 - 1, fcn._2);
+            else if (this._isCoordinatesInFace(this._getCoordinatesOfCenter(fcStart.getFace(), fcn._1 + 1, fcn._2))) fcn = new Tuple(fcn._1 + 1, fcn._2);
+            else if (this._isCoordinatesInFace(this._getCoordinatesOfCenter(fcStart.getFace(), fcn._1, fcn._2 - 1))) fcn = new Tuple(fcn._1, fcn._2 - 1);
+            else if (this._isCoordinatesInFace(this._getCoordinatesOfCenter(fcStart.getFace(), fcn._1, fcn._2 + 1))) fcn = new Tuple(fcn._1, fcn._2 + 1);
+            else if (this._isCoordinatesInFace(this._getCoordinatesOfCenter(fcStart.getFace(), fcn._1 - 1, fcn._2 - 1))) fcn = new Tuple(fcn._1 -1, fcn._2 - 1);
+            else if (this._isCoordinatesInFace(this._getCoordinatesOfCenter(fcStart.getFace(), fcn._1 + 1, fcn._2 - 1))) fcn = new Tuple(fcn._1 + 1, fcn._2 - 1);
+            else if (this._isCoordinatesInFace(this._getCoordinatesOfCenter(fcStart.getFace(), fcn._1 - 1, fcn._2 + 1))) fcn = new Tuple(fcn._1 - 1, fcn._2 + 1);
+            else if (this._isCoordinatesInFace(this._getCoordinatesOfCenter(fcStart.getFace(), fcn._1 + 1, fcn._2 + 1))) fcn = new Tuple(fcn._1 + 1, fcn._2 + 1);
+        }
+
+        // collect cells
         for (Tuple<Integer, Integer> dN : dNs) {
-            FaceCoordinates fc = null;
-            GeoCoordinates gc = null;
+            FaceCoordinates fc;
+            GeoCoordinates gc;
             Set<Integer> success = new HashSet();
             Set<Integer> successLast;
             boolean hasFoundInside;
@@ -333,6 +419,45 @@ public class ISEA3H {
             }
             for (Map.Entry<Integer, FaceCoordinates> e : faceTodo.entrySet()) if (e.getValue() != null && !result.cellAggregator.contains(this.cellForLocation(this._projection.icosahedronToSphere(e.getValue())))) result = this._cellsForBound(result, e.getValue(), lat0, lat1, lon0, lon1);
         }
+
+        return result;
+    }
+
+    private <T extends CellAggregator> ResultCellForBound<T> _cellsForFace(ResultCellForBound<T> result, int face) throws Exception {
+        int d = this._projection.faceOrientation(face);
+        boolean notSwapped = (this._coordinatesNotSwapped());
+
+        // compute
+        FaceCoordinates fc;
+        GeoCoordinates gc;
+        int nyMax = (int) Math.round((notSwapped ? Math.pow(3, this._resolution / 2.) : 2 * Math.pow(3, (this._resolution - 1) / 2.)));
+        int nyMin = -(int) (notSwapped ? (nyMax - 1) / 2. : nyMax / 2.);
+        int nxMin = 0;
+        int nxMax = 0;
+        int counter = 0;
+        for (int ny = nyMax; ny >= nyMin; ny--) {
+            if (notSwapped) {
+                if (counter == 1) {
+                    nxMax++;
+                    nxMin = -nxMax;
+                }
+                if (counter == 3) {
+                    nxMax++;
+                    nxMin = -nxMax;
+                    counter = 0;
+                }
+                counter++;
+            } else {
+                nxMin = (d > 0) ? -(int)Math.floor((nyMax - ny) / 2.) : -(int)Math.ceil((nyMax - ny) / 2.);
+                nxMax = (d > 0) ? (int)Math.ceil((nyMax - ny) / 2.) : (int)Math.floor((nyMax - ny) / 2.);
+            }
+            for (int nx = nxMin; nx <= nxMax; nx++) {
+                fc = this._getCoordinatesOfCenter2(face, notSwapped ? nx : d * ny, notSwapped ? d * ny : nx, d);
+                gc = this._projection.icosahedronToSphere(fc);
+                result.cellAggregator.add(this._newGridCell(gc, fc));
+            }
+        }
+
         return result;
     }
 
@@ -345,18 +470,30 @@ public class ISEA3H {
         }
     }
 
-    private abstract class CellAggregator {
-        public abstract void add(GridCell gc);
+    private abstract class CellAggregator<T> {
+        public abstract CellAggregator<T> cloneEmpty();
+        public abstract void add(GridCell c);
+        public abstract void addAll(T ca);
         public abstract int size();
-        public abstract boolean contains(GridCell gc);
+        public abstract boolean contains(GridCell c);
     }
 
-    private class CellAggregatorByCells extends CellAggregator {
+    private class CellAggregatorByCells extends CellAggregator<CellAggregatorByCells> {
         private Set<GridCell> _cells = new HashSet();
 
         @Override
-        public void add(GridCell gc) {
-            this._cells.add(gc);
+        public CellAggregator<CellAggregatorByCells> cloneEmpty() {
+            return new CellAggregatorByCells();
+        }
+
+        @Override
+        public void add(GridCell c) {
+            this._cells.add(c);
+        }
+
+        @Override
+        public void addAll(CellAggregatorByCells ca) {
+            this._cells.addAll(ca.getCells());
         }
 
         @Override
@@ -365,8 +502,8 @@ public class ISEA3H {
         }
 
         @Override
-        public boolean contains(GridCell gc) {
-            return this._cells.contains(gc);
+        public boolean contains(GridCell c) {
+            return this._cells.contains(c);
         }
 
         public Set<GridCell> getCells() {
@@ -374,12 +511,22 @@ public class ISEA3H {
         }
     }
 
-    private class CellAggregatorByCellIds extends CellAggregator {
+    private class CellAggregatorByCellIds extends CellAggregator<CellAggregatorByCellIds> {
         private Set<Long> _cells = new HashSet();
 
         @Override
-        public void add(GridCell gc) {
-            this._cells.add(gc.getId());
+        public CellAggregator<CellAggregatorByCellIds> cloneEmpty() {
+            return new CellAggregatorByCellIds();
+        }
+
+        @Override
+        public void add(GridCell c) {
+            this._cells.add(c.getId());
+        }
+
+        @Override
+        public void addAll(CellAggregatorByCellIds ca) {
+            this._cells.addAll(ca.getCellIds());
         }
 
         @Override
@@ -388,8 +535,8 @@ public class ISEA3H {
         }
 
         @Override
-        public boolean contains(GridCell gc) {
-            return this._cells.contains(gc);
+        public boolean contains(GridCell c) {
+            return this._cells.contains(c);
         }
 
         public Set<Long> getCellIds() {
@@ -422,8 +569,14 @@ public class ISEA3H {
      * @throws Exception
      */
     public Double bufferEstimator(double lat0, double lat1, double lon0, double lon1) throws Exception {
+        lat0 = Math.max(lat0, -90);
+        lat1 = Math.min(lat1, 90);
+        if (lon1 - lon0 >= 360) {
+            lon0 = -180;
+            lon1 = 180;
+        }
         FaceCoordinates southWest = this._projection.sphereToIcosahedron(new GeoCoordinates(lat0, lon0));
-        FaceCoordinates northEast = this._projection.sphereToIcosahedron(new GeoCoordinates(lat0, lon0));
+        FaceCoordinates northEast = this._projection.sphereToIcosahedron(new GeoCoordinates(lat1, lon1));
         GeoCoordinates southWest2 = this._projection.icosahedronToSphere(new FaceCoordinates(southWest.getFace(), southWest.getX() - this.diameterOfHexagonCellOnIcosahedron() / 2, southWest.getY() - this.diameterOfHexagonCellOnIcosahedron() / 2));
         GeoCoordinates northEast2 = this._projection.icosahedronToSphere(new FaceCoordinates(northEast.getFace(), northEast.getX() - this.diameterOfHexagonCellOnIcosahedron() / 2, northEast.getY() - this.diameterOfHexagonCellOnIcosahedron() / 2));
         List<Double> l = new ArrayList<>();
@@ -447,6 +600,10 @@ public class ISEA3H {
 
     private FaceCoordinates _faceCoordinatesSwapByResolution(int face, double x, double y) {
         return new FaceCoordinates(face, this._coordinatesNotSwapped() ? x : y, this._coordinatesNotSwapped() ? y : x);
+    }
+
+    private FaceCoordinates _faceCoordinatesSwapByResolution(FaceCoordinates fc) {
+        return this._faceCoordinatesSwapByResolution(fc.getFace(), fc.getX(), fc.getY());
     }
 
     private boolean _coordinatesNotSwapped() {
