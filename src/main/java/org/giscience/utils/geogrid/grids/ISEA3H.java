@@ -424,16 +424,19 @@ public class ISEA3H {
                     if (this._isCoordinatesInFace(fc)) {
                         success.add(ny);
                         result.cellAggregator.add(face, this._newGridCell(gc, fc));
-                    } else if ((!hasFoundOutsideX && ny != fcn._2) || (!hasFoundOutsideY && ny == fcn._2)) {
-                        if (ny != fcn._2) hasFoundOutsideX = true;
-                        else hasFoundOutsideY = true;
-                        FaceCoordinates fc2 = this._projection.sphereToIcosahedron(gc);
-                        if (faceTodo.containsKey(fc2.getFace())) faceTodo.put(fc2.getFace(), fc2);
-                        else {
-                            int sizeBefore = result.cellAggregator.size();
-                            result = this._cellsForBound(result, fc2, lat0, lat1, lon0, lon1);
-                            if (result.cellAggregator.size() != sizeBefore) faceTodo.put(fc2.getFace(), null);
+                    } else {
+                        if ((!hasFoundOutsideX && ny != fcn._2) || (!hasFoundOutsideY && ny == fcn._2)) {
+                            if (ny != fcn._2) hasFoundOutsideX = true;
+                            else hasFoundOutsideY = true;
+                            FaceCoordinates fc2 = this._projection.sphereToIcosahedron(gc);
+                            if (faceTodo.containsKey(fc2.getFace())) faceTodo.put(fc2.getFace(), fc2);
+                            else {
+                                int sizeBefore = result.cellAggregator.size();
+                                result = this._cellsForBound(result, fc2, lat0, lat1, lon0, lon1);
+                                if (result.cellAggregator.size() != sizeBefore) faceTodo.put(fc2.getFace(), null);
+                            }
                         }
+                        if (!success.isEmpty()) break;
                     }
                 }
                 if (success.isEmpty()) break;
