@@ -406,7 +406,7 @@ public class ISEA3H {
             boolean hasFoundOutsideX = false;
             boolean hasFoundOutsideY = false;
             Map<Integer, FaceCoordinates> faceTodo = new HashMap();
-            int nx = fcn._1 - dN._1;
+            int nx = fcn._1 - dN._1 + ((dN._1 < 0) ? dN._1 : 0);
             while (true) {
                 nx += dN._1;
                 int ny = fcn._2 - dN._2;
