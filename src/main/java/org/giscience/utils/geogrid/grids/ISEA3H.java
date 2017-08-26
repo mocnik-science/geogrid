@@ -403,6 +403,8 @@ public class ISEA3H {
             Set<Integer> success = new HashSet();
             Set<Integer> successLast;
             boolean hasFoundInside;
+            boolean hasFoundOutsideX = false;
+            boolean hasFoundOutsideY = false;
             Map<Integer, FaceCoordinates> faceTodo = new HashMap();
             int nx = fcn._1 - dN._1;
             while (true) {
@@ -422,7 +424,9 @@ public class ISEA3H {
                     if (this._isCoordinatesInFace(fc)) {
                         success.add(ny);
                         result.cellAggregator.add(face, this._newGridCell(gc, fc));
-                    } else {
+                    } else if ((!hasFoundOutsideX && ny != fcn._2) || (!hasFoundOutsideY && ny == fcn._2)) {
+                        if (ny != fcn._2) hasFoundOutsideX = true;
+                        else hasFoundOutsideY = true;
                         FaceCoordinates fc2 = this._projection.sphereToIcosahedron(gc);
                         if (faceTodo.containsKey(fc2.getFace())) faceTodo.put(fc2.getFace(), fc2);
                         else {
