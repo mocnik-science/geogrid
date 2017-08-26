@@ -29,7 +29,7 @@ public class GeoCoordinates implements Comparable<GeoCoordinates> {
 
     public GeoCoordinates(Double lat, Double lon) throws Exception {
         if (lat < -90 || lat > 90) throw new Exception("invalid latitude");
-        lon = lon % 360;
+        lon %= 360;
         if (lon > 180) lon -= 360;
         else if (lon < -180) lon += 360;
         this._lat = lat;

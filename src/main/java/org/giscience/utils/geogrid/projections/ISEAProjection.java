@@ -49,7 +49,7 @@ import java.util.List;
  */
 public class ISEAProjection {
     // constants
-    private final double _goldenRatio = (1 + Math.sqrt(5)) / 2.;
+    private static final double _goldenRatio = (1 + Math.sqrt(5)) / 2.;
     // radius
     private final double _RR_earth = (1 / (2 * Math.sqrt(5)) + 1 / 6.) * Math.sqrt(Math.PI * Math.sqrt(3)); // R' / R
     private final double _R; // R'
@@ -69,14 +69,14 @@ public class ISEAProjection {
     private final double _b = .860; // b
     // face constants
     private final double __E; // E
-    private final double __F = Trigonometric.atan(1 / (2 * Math.pow(this._goldenRatio, 2))); // F = \atan(1 / (2 \phi^2)) where \phi = (1 + \sqrt{5}) / 2 is the golden ratio; needs some thinking to derive
+    private final double __F = Trigonometric.atan(1 / (2 * Math.pow(ISEAProjection._goldenRatio, 2))); // F = \atan(1 / (2 \phi^2)) where \phi = (1 + \sqrt{5}) / 2 is the golden ratio; needs some thinking to derive
     // alternative computation F = 90 + g - 2 * \atan(\phi); formula can easily be derived from the cartesian coordinates of the vertices of the icosahedron
     private final double __G; // G // this value incorporates R', and not R, as is stated wrongly in the paper by Snyder
     private final int __X = 36; // half the difference in latitude between two horizontally adjacent faces
     private final double[] __lats = new double[20];
     private final int[] __lons = new int[20];
     // precision
-    private final double _precision = 1e-9;
+    private static final double _precision = 1e-9;
     // computed values
     private final double _2R; // 2 R'
     private final double __EF; // E - F
@@ -89,11 +89,11 @@ public class ISEAProjection {
     private final double _R_tan_g; // R' \tan g
     private final double _R_tan_g_2; // R'^2 * \tan^2 g
     private final double _sinG_cos_g; // \sin G \cos g
-    private final double _G_180 = this._G - 180; // G - 180
+    private final double _G_180 = this._G - 180.; // G - 180
 
     public ISEAProjection() {
         // computations
-        this._g = this.__F + 2 * Trigonometric.atan(this._goldenRatio) - 90;
+        this._g = this.__F + 2 * Trigonometric.atan(ISEAProjection._goldenRatio) - 90;
         this._R = this._RR_earth * this._R_earth;
         this.__E = 90 - this._g;
         this.__G = this._R * Trigonometric.tan(this._g) * Math.sqrt(3) / 2.;
@@ -312,7 +312,7 @@ public class ISEAProjection {
             double cosAz_earth = Trigonometric.cos(Az_earth); // \cos Az
             double z = Trigonometric.acos(sinLat0 * sinLat + cosLat0 * cosLat * cosLonLon0); // z
             double q = Trigonometric.atan2(this._tan_g,  cosAz_earth + sinAz_earth * this._cotTheta); // q
-            if (z > q + this._precision) continue;
+            if (z > q + ISEAProjection._precision) continue;
             double H = this._compute_H(sinAz_earth, cosAz_earth); // H
             double area = (Az_earth + this._G_180 + H) * this._pi_R_earth2_180; // A_G and A_{ABD}
             double Az = Trigonometric.atan2(2 * area, this._R_tan_g_2 - area * this._2cotTheta); // Az'
@@ -421,10 +421,10 @@ public class ISEAProjection {
         double cosAz = Trigonometric.cos(Az); // \cos Az'
         double cotAz = cosAz / sinAz; // \cot Az'
         double area = this._R_tan_g_2 / (2 * (cotAz + this._cotTheta)); // A_G or A_{ABD}
-        double deltaAz = 10 * this._precision;
+        double deltaAz = 10 * ISEAProjection._precision;
         double area_pi_R_earth2_180_G_180 = area / this._pi_R_earth2_180 - this._G_180;
         double Az_earth = Az;
-        while (Math.abs(deltaAz) > this._precision) {
+        while (Math.abs(deltaAz) > ISEAProjection._precision) {
             double H = this._compute_H(Trigonometric.sin(Az_earth), Trigonometric.cos(Az_earth)); // H
             double FAz_earth = area_pi_R_earth2_180_G_180 - H - Az_earth; // F(Az) or g(Az)
             double F2Az_earth = (Trigonometric.cos(Az_earth) * this._sinG_cos_g + Trigonometric.sin(Az_earth) * this._cosG) / Trigonometric.sin(H) - 1; // F'(Az) or g'(Az)

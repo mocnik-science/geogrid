@@ -22,8 +22,8 @@ package org.giscience.utils.geogrid.geometry;
  * @author Franz-Benjamin Mocnik
  */
 public class GridCell implements Comparable<GridCell> {
-    private final double _precision = 1e-9;
-    private final double _precisionPerDefinition = .5e-6;
+    private static final double _precision = 1e-9;
+    private static final double _precisionPerDefinition = .5e-6;
     private final Integer _resolution;
     private final double _lat;
     private final double _lon;
@@ -34,8 +34,8 @@ public class GridCell implements Comparable<GridCell> {
         if (resolution < 0 || resolution > 18) throw new Exception("resolution must be between 0 and 18");
         this._resolution = resolution;
         if (lat < -90 || lat > 90) throw new Exception("invalid latitude");
-        if (lat < -90 + this._precisionPerDefinition || lat > 90 - this._precisionPerDefinition) lon = 0;
-        lon = lon % 360;
+        if (lat < -90 + GridCell._precisionPerDefinition || lat > 90 - GridCell._precisionPerDefinition) lon = 0;
+        lon %= 360;
         if (lon > 180) lon -= 360;
         else if (lon < -180) lon += 360;
         this._lat = lat;
@@ -83,8 +83,8 @@ public class GridCell implements Comparable<GridCell> {
      */
     public Long getId() {
         if (this._id == null) {
-            long sgnLat = (this._lat < 0 && Math.abs(this._lat) >= this._precisionPerDefinition) ? 20 : 0;
-            long sgnLon = (this._lon < 0 && Math.abs(this._lon) >= this._precisionPerDefinition && 180 - Math.abs(this._lon) >= this._precisionPerDefinition) ? 40 : 0;
+            long sgnLat = (this._lat < 0 && Math.abs(this._lat) >= GridCell._precisionPerDefinition) ? 20 : 0;
+            long sgnLon = (this._lon < 0 && Math.abs(this._lon) >= GridCell._precisionPerDefinition && 180 - Math.abs(this._lon) >= GridCell._precisionPerDefinition) ? 40 : 0;
             this._id = (this._isPentagon ? -1 : 1) * ((this._resolution.longValue() + sgnLat + sgnLon) * (long) 1e17 + Math.abs(Math.round(this._lat * 1e6)) * (long) 1e9 + Math.abs(Math.round(this._lon * 1e6)));
         }
         return this._id;
@@ -107,8 +107,8 @@ public class GridCell implements Comparable<GridCell> {
     public int compareTo(GridCell o) {
         int d = Integer.compare(this._resolution, o._resolution);
         if (d != 0) return d;
-        d = (Math.abs(this._lat - o._lat) < this._precision) ? 0 : Double.compare(this._lat, o._lat);
+        d = (Math.abs(this._lat - o._lat) < GridCell._precision) ? 0 : Double.compare(this._lat, o._lat);
         if (d != 0) return d;
-        return (Math.abs(this._lon - o._lon) < this._precision) ? 0 : Double.compare(this._lon, o._lon);
+        return (Math.abs(this._lon - o._lon) < GridCell._precision) ? 0 : Double.compare(this._lon, o._lon);
     }
 }

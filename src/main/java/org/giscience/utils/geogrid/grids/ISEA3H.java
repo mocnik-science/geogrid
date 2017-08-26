@@ -52,7 +52,7 @@ import java.util.concurrent.Future;
  * @author Franz-Benjamin Mocnik
  */
 public class ISEA3H {
-    private final double _precision = 1e-9;
+    private static final double _precision = 1e-9;
     private final ISEAProjection _projection = new ISEAProjection();
     private final int _resolution; // resolution - 1
     private final long _numberOfHexagonCells;
@@ -61,7 +61,6 @@ public class ISEA3H {
     private final double _inverseSqrt3l0; // 1 / \sqrt{3} * l_0
     private final double _l; // length of the triangle base at the given resolution
     private final double _l2; // l / 2
-    private final double _l3; // l / 3
     private final double _l6; // l / 6
     private final double _l23; // l * 2 / 3
     private final double _inverseSqrt3 = 1 / Math.sqrt(3); // 1 / \sqrt{3}
@@ -87,7 +86,6 @@ public class ISEA3H {
         this._inverseSqrt3l0 = this._inverseSqrt3 * this._l0;
         this._l = Math.pow(this._inverseSqrt3, this._resolution) * this._l0;
         this._l2 = this._l / 2.;
-        this._l3 = this._l / 3.;
         this._l6 = this._l / 6.;
         this._l23 = this._l * 2 / 3.;
         this._inverseSqrt3l = this._inverseSqrt3 * this._l;
@@ -107,7 +105,7 @@ public class ISEA3H {
      */
     public void setNumberOfThreads(int n) {
         this._numberOfThreads = n;
-    };
+    }
 
     /**
      * Get the number of threads.
@@ -204,13 +202,13 @@ public class ISEA3H {
      * @return face coordinates of the center of the corresponding grid cell
      * @throws Exception
      */
-    public FaceCoordinates cellForLocation(FaceCoordinates c) throws Exception {
+    public FaceCoordinates cellForLocation(FaceCoordinates c) {
         double x = (this._coordinatesNotSwapped()) ? c.getX() : c.getY();
         double y = (this._coordinatesNotSwapped()) ? c.getY() : c.getX();
         int nxCenter = (int) Math.round(x / this._l2);
         double xCenter = nxCenter * this._l2;
         if (Math.abs(x - xCenter) <= this._l6) {
-            int nyCenter12 = (int) Math.round((((nxCenter % 2 == 0) ? y : y - this._inverseSqrt3l2)) / this._inverseSqrt3l);
+            int nyCenter12 = (int) Math.round(((nxCenter % 2 == 0) ? y : y - this._inverseSqrt3l2) / this._inverseSqrt3l);
             double yCenter12 = nyCenter12 * this._inverseSqrt3l + ((nxCenter % 2 == 0) ? 0 : this._inverseSqrt3l2);
             return this._faceCoordinatesSwapByResolution(c.getFace(), xCenter, yCenter12);
         }
@@ -252,7 +250,7 @@ public class ISEA3H {
         double y = (this._coordinatesNotSwapped()) ? c.getY() : c.getX();
         int nxCenter = (int) Math.round(x / this._l2);
         double xCenter = nxCenter * this._l2;
-        if (Math.abs(x - xCenter) <= this._l6) return new Tuple(nxCenter, (int) Math.round((((nxCenter % 2 == 0) ? y : y - this._inverseSqrt3l2)) / this._inverseSqrt3l));
+        if (Math.abs(x - xCenter) <= this._l6) return new Tuple(nxCenter, (int) Math.round(((nxCenter % 2 == 0) ? y : y - this._inverseSqrt3l2) / this._inverseSqrt3l));
         else {
             int nyCenter1 = (int) Math.round(y / this._inverseSqrt3l);
             double yCenter1 = nyCenter1 * this._inverseSqrt3l;
@@ -486,15 +484,15 @@ public class ISEA3H {
     }
 
     private class ResultCellForBound<T extends CellAggregator> {
-        public T cellAggregator;
-        public Set<Integer> visitedCells = new HashSet();
+        public final T cellAggregator;
+        public final Set<Integer> visitedCells = new HashSet();
 
         public ResultCellForBound(T cellAggregator) {
             this.cellAggregator = cellAggregator;
         }
     }
 
-    private abstract class CellAggregator<T> {
+    private interface CellAggregator<T> {
         public abstract CellAggregator<T> cloneEmpty();
         public abstract void add(int face, GridCell c) throws Exception;
         public abstract void addAll(T ca);
@@ -502,7 +500,7 @@ public class ISEA3H {
         public abstract boolean contains(GridCell c);
     }
 
-    private class CellAggregatorByCells extends CellAggregator<CellAggregatorByCells> {
+    private class CellAggregatorByCells implements CellAggregator<CellAggregatorByCells> {
         private Set<GridCell> _cells = new HashSet();
 
         @Override
@@ -535,7 +533,7 @@ public class ISEA3H {
         }
     }
 
-    private class CellAggregatorByCellIds extends CellAggregator<CellAggregatorByCellIds> {
+    private class CellAggregatorByCellIds implements CellAggregator<CellAggregatorByCellIds> {
         private Set<Long> _cells = new HashSet();
 
         @Override
@@ -560,7 +558,7 @@ public class ISEA3H {
 
         @Override
         public boolean contains(GridCell c) {
-            return this._cells.contains(c);
+            return this._cells.contains(c.getId());
         }
 
         public Set<Long> getCellIds() {
@@ -568,7 +566,7 @@ public class ISEA3H {
         }
     }
 
-    private class CellAggregatorByCellIdsToFile extends CellAggregator<CellAggregatorByCellIdsToFile> {
+    private class CellAggregatorByCellIdsToFile implements CellAggregator<CellAggregatorByCellIdsToFile> {
         private List<CellAggregatorByCellIdsToFile> _caList = new ArrayList();
         private final String _filename;
         private FileWriter _fileWriter = null;
@@ -620,7 +618,7 @@ public class ISEA3H {
 
     private GridCell _newGridCell(GeoCoordinates gc, FaceCoordinates fc) throws Exception {
         int d = this._projection.faceOrientation(fc);
-        boolean isPentagon = (Math.abs(Math.abs(fc.getX()) - this._triangleA) < this._precision && Math.abs(fc.getY() + d * this._triangleC) < this._precision) || (Math.abs(fc.getX()) < this._precision && Math.abs(fc.getY() - d * this._triangleB) < this._precision);
+        boolean isPentagon = (Math.abs(Math.abs(fc.getX()) - this._triangleA) < ISEA3H._precision && Math.abs(fc.getY() + d * this._triangleC) < ISEA3H._precision) || (Math.abs(fc.getX()) < ISEA3H._precision && Math.abs(fc.getY() - d * this._triangleB) < ISEA3H._precision);
         return new GridCell(this._resolution, gc, isPentagon);
     }
 
@@ -652,26 +650,23 @@ public class ISEA3H {
         l.add(Math.abs(southWest2.getLon() - lon0));
         l.add(Math.abs(northEast2.getLat() - lat1));
         l.add(Math.abs(northEast2.getLon() - lon1));
-        return l.stream().max(Double::compareTo).get();
+        Optional<Double> result = l.stream().max(Double::compareTo);
+        return (result.isPresent()) ? result.get() : null;
     }
 
     private boolean _isCoordinatesInFace(FaceCoordinates c) {
         int d = this._projection.faceOrientation(c);
 
         // test whether coordinate is left of the triangle, right of the triangle, or below the triangle
-        if (d * c.getY() > c.getX() * this._triangleBCA + this._triangleB + this._precision) return false;
-        if (d * c.getY() > -c.getX() * this._triangleBCA + this._triangleB + this._precision) return false;
-        if (d * c.getY() < -this._triangleC - this._precision) return false;
+        if (d * c.getY() > c.getX() * this._triangleBCA + this._triangleB + ISEA3H._precision) return false;
+        if (d * c.getY() > -c.getX() * this._triangleBCA + this._triangleB + ISEA3H._precision) return false;
+        if (d * c.getY() < -this._triangleC - ISEA3H._precision) return false;
 
         return true;
     }
 
     private FaceCoordinates _faceCoordinatesSwapByResolution(int face, double x, double y) {
         return new FaceCoordinates(face, this._coordinatesNotSwapped() ? x : y, this._coordinatesNotSwapped() ? y : x);
-    }
-
-    private FaceCoordinates _faceCoordinatesSwapByResolution(FaceCoordinates fc) {
-        return this._faceCoordinatesSwapByResolution(fc.getFace(), fc.getX(), fc.getY());
     }
 
     private boolean _coordinatesNotSwapped() {
