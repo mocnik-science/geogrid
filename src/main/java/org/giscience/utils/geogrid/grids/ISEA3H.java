@@ -25,6 +25,9 @@ import org.giscience.utils.geogrid.geometry.GeoCoordinates;
 import org.giscience.utils.geogrid.geometry.GridCell;
 import org.giscience.utils.geogrid.projections.ISEAProjection;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -294,6 +297,19 @@ public class ISEA3H {
     }
 
     /**
+     * Save cell ids to disk.
+     *
+     * For each face, one file is created. The cell ids in the different files are not unique and non-unique ids need to
+     * be removed.
+     *
+     * @param file prefix of the files
+     * @return ids of cells
+     */
+    public void cellIds(String file) throws Exception {
+        this._cells(new CellAggregatorByCellIdsToFile(file)).closeFile();
+    }
+
+    /**
      * Returns cells that are inside the bounds, or at least very near.
      *
      * Note that the result should, in fact, include all cells whose center points are inside the given bounds, but also
@@ -380,6 +396,7 @@ public class ISEA3H {
         }
 
         // collect cells
+        int face = fcStart.getFace();
         for (Tuple<Integer, Integer> dN : dNs) {
             FaceCoordinates fc;
             GeoCoordinates gc;
@@ -397,14 +414,14 @@ public class ISEA3H {
                 hasFoundInside = false;
                 while (true) {
                     ny += dN._2;
-                    fc = this._getCoordinatesOfCenter(fcStart.getFace(), nx, ny);
+                    fc = this._getCoordinatesOfCenter(face, nx, ny);
                     gc = this._projection.icosahedronToSphere(fc);
                     if (this._isInside(gc, lat0, lat1, lon0, lon1)) hasFoundInside = true;
                     else if (hasFoundInside || maxMinValue == null || ((dN._2 >= 0) ? ny > maxMinValue : ny < maxMinValue)) break;
                     else continue;
                     if (this._isCoordinatesInFace(fc)) {
                         success.add(ny);
-                        result.cellAggregator.add(this._newGridCell(gc, fc));
+                        result.cellAggregator.add(face, this._newGridCell(gc, fc));
                     } else {
                         FaceCoordinates fc2 = this._projection.sphereToIcosahedron(gc);
                         if (faceTodo.containsKey(fc2.getFace())) faceTodo.put(fc2.getFace(), fc2);
@@ -454,7 +471,7 @@ public class ISEA3H {
             for (int nx = nxMin; nx <= nxMax; nx++) {
                 fc = this._getCoordinatesOfCenter2(face, notSwapped ? nx : d * ny, notSwapped ? d * ny : nx, d);
                 gc = this._projection.icosahedronToSphere(fc);
-                result.cellAggregator.add(this._newGridCell(gc, fc));
+                result.cellAggregator.add(face, this._newGridCell(gc, fc));
             }
         }
 
@@ -472,7 +489,7 @@ public class ISEA3H {
 
     private abstract class CellAggregator<T> {
         public abstract CellAggregator<T> cloneEmpty();
-        public abstract void add(GridCell c);
+        public abstract void add(int face, GridCell c) throws Exception;
         public abstract void addAll(T ca);
         public abstract int size();
         public abstract boolean contains(GridCell c);
@@ -487,7 +504,7 @@ public class ISEA3H {
         }
 
         @Override
-        public void add(GridCell c) {
+        public void add(int face, GridCell c) {
             this._cells.add(c);
         }
 
@@ -520,7 +537,7 @@ public class ISEA3H {
         }
 
         @Override
-        public void add(GridCell c) {
+        public void add(int face, GridCell c) {
             this._cells.add(c.getId());
         }
 
@@ -541,6 +558,50 @@ public class ISEA3H {
 
         public Set<Long> getCellIds() {
             return this._cells;
+        }
+    }
+
+    private class CellAggregatorByCellIdsToFile extends CellAggregator<CellAggregatorByCellIdsToFile> {
+        private List<CellAggregatorByCellIdsToFile> _caList = new ArrayList();
+        private final String _filename;
+        private FileWriter _fileWriter = null;
+
+        public CellAggregatorByCellIdsToFile(String filename) {
+            this._filename = filename;
+        }
+
+        @Override
+        public CellAggregator<CellAggregatorByCellIdsToFile> cloneEmpty() {
+            return new CellAggregatorByCellIdsToFile(this._filename);
+        }
+
+        @Override
+        public void add(int face, GridCell c) throws IOException {
+            if (this._fileWriter== null) {
+                this._fileWriter = new FileWriter(new File(this._filename + ".face" + face));
+            }
+            this._fileWriter.write(c.getId().toString());
+            this._fileWriter.write(System.lineSeparator());
+        }
+
+        @Override
+        public void addAll(CellAggregatorByCellIdsToFile ca) {
+            this._caList.add(ca);
+        }
+
+        @Override
+        public int size() {
+            return 0;
+        }
+
+        @Override
+        public boolean contains(GridCell c) {
+            return false;
+        }
+
+        public void closeFile() throws IOException {
+            if (this._fileWriter != null) this._fileWriter.close();
+            for (CellAggregatorByCellIdsToFile ca : this._caList) ca.closeFile();
         }
     }
 
