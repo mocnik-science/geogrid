@@ -58,11 +58,11 @@ public class ISEA3HTest {
 
     @Test
     public void numberOfCellsByGrid() throws Exception {
-        for (int r = 1; r < 13; r++) this._numberOfCellsByGrid(r);
+        for (int r = 1; r <= 12; r++) this._numberOfCellsByGrid(r);
     }
     public void _numberOfCellsByGrid(int resolution) throws Exception {
         ISEA3H grid = new ISEA3H(resolution);
-        long cells = grid.cellsForBound(-90, 90, -180, 180).size();
+        long cells = grid.cells().size();
         long cellsExpected = grid.numberOfHexagonCells() + grid.numberOfPentagonCells();
         System.out.format("resolution %d - %d - %d\n", resolution, cells, cellsExpected);
         assertEquals(cells, cellsExpected);
