@@ -25,6 +25,7 @@ import org.giscience.utils.geogrid.geometry.GeoCoordinates;
 import org.giscience.utils.geogrid.geometry.GridCell;
 import org.giscience.utils.geogrid.projections.ISEAProjection;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -567,9 +568,12 @@ public class ISEA3H {
     }
 
     private class CellAggregatorByCellIdsToFile implements CellAggregator<CellAggregatorByCellIdsToFile> {
+        private ArrayList<Long> _cells = new ArrayList<>();
         private List<CellAggregatorByCellIdsToFile> _caList = new ArrayList();
         private final String _filename;
-        private FileWriter _fileWriter = null;
+        private Integer _face = null;
+        private int _chunk = 0;
+        private static final int chunkSize = 300000000;
 
         public CellAggregatorByCellIdsToFile(String filename) {
             this._filename = filename;
@@ -582,11 +586,9 @@ public class ISEA3H {
 
         @Override
         public void add(int face, GridCell c) throws IOException {
-            if (this._fileWriter== null) {
-                this._fileWriter = new FileWriter(new File(this._filename + ".face" + face));
-            }
-            this._fileWriter.write(c.getId().toString());
-            this._fileWriter.write(System.lineSeparator());
+            this._face = face;
+            this._cells.add(c.getId());
+            if (this._cells.size() >= this.chunkSize) this._writeChunkToFile();
         }
 
         @Override
@@ -604,8 +606,22 @@ public class ISEA3H {
             return false;
         }
 
+        private void _writeChunkToFile() throws IOException {
+            Collections.sort(this._cells);
+            FileWriter fileWriter = new FileWriter(new File(this._filename + ".face" + this._face + "." + this._chunk));
+            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+            for (Long a : this._cells) {
+                bufferedWriter.append(a.toString());
+                bufferedWriter.newLine();
+            }
+            bufferedWriter.close();
+            fileWriter.close();
+            this._chunk++;
+            this._cells = new ArrayList<>();
+        }
+
         public void closeFile() throws IOException {
-            if (this._fileWriter != null) this._fileWriter.close();
+            if (this._cells.size() > 0) this._writeChunkToFile();
             for (CellAggregatorByCellIdsToFile ca : this._caList) ca.closeFile();
         }
     }
