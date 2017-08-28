@@ -1,5 +1,6 @@
 .idea/**
 *.iml
 */.swp
+data/**
 target/**
 
