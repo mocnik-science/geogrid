@@ -17,7 +17,7 @@ import java.nio.file.Path;
  */
 public class SaveGridToDisk {
     private static final String path = "data";
-    private static final int resolutionMax = 13;
+    private static final int resolutionMax = 14;
 
     public static void main(String[] args) throws Exception {
         if (!new File(SaveGridToDisk.path).exists()) new File(SaveGridToDisk.path).mkdirs();
