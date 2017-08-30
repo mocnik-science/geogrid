@@ -573,7 +573,7 @@ public class ISEA3H {
         private final String _filename;
         private Integer _face = null;
         private int _chunk = 0;
-        private static final int chunkSize = 300000000;
+        private static final int _chunkSize = 300000000;
 
         public CellAggregatorByCellIdsToFile(String filename) {
             this._filename = filename;
@@ -588,7 +588,7 @@ public class ISEA3H {
         public void add(int face, GridCell c) throws IOException {
             this._face = face;
             this._cells.add(c.getId());
-            if (this._cells.size() >= this.chunkSize) this._writeChunkToFile();
+            if (this._cells.size() >= this._chunkSize) this._writeChunkToFile();
         }
 
         @Override
