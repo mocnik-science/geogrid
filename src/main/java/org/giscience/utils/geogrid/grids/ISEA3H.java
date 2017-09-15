@@ -48,7 +48,7 @@ import java.util.concurrent.Future;
  * The ISEA3H has been proposed by:
  *
  * Kevin Sahr, Denis White, and A. Jon Kimerling: Geodesic Discrete Global Grid Systems. Cartography and Geographic
- * Information Science, 30(2), 121–134, 2003.
+ * Information Science, 30(2), 121–134, 2003. doi:10.1559/152304003100011090
  *
  * @author Franz-Benjamin Mocnik
  */
