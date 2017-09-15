@@ -144,7 +144,7 @@ public class ISEA3H {
      *
      * @return area of a hexagonal cell
      */
-    public double areaOfAHexagonCell() {
+    public double areaOfAHexagonalCell() {
         return WGS84.areaOfEarth / (this._numberOfHexagonCells + 5 / 6. * this._numberOfPentagonCells);
     }
 
@@ -154,8 +154,8 @@ public class ISEA3H {
      *
      * @return area of a pentagonal cell
      */
-    public double areaOfAPentagonCell() {
-        return 5 / 6. * this.areaOfAHexagonCell();
+    public double areaOfAPentagonalCell() {
+        return 5 / 6. * this.areaOfAHexagonalCell();
     }
 
     /**

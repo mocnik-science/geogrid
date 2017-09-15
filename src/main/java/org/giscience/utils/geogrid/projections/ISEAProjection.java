@@ -257,7 +257,7 @@ public class ISEAProjection {
     }
 
     /**
-     * Returns the length of the bases of the triangles of the icosahedron
+     * Returns the length of the bases of the triangles of the icosahedron.
      *
      * @return length of the bases of the triangles
      */
