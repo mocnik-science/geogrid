@@ -64,7 +64,7 @@ public class GridCell implements Comparable<GridCell> {
     }
 
     /**
-     * Returns an id of the cell. The id consists of the following elements:
+     * Returns the ID of the cell. The ID consists of the following elements:
      * <ul>
      *     <li>The leading sign is positive in case of a hexagon, and negative in case of a pentagon.</li>
      *     <li>This first two digits consist of the resolution incremented by 20 in case of negative latitude, by 40 in
@@ -77,11 +77,11 @@ public class GridCell implements Comparable<GridCell> {
      *     .5e-6. The longitude is expected to be greater than -180 and strictly less than 180 degrees.</li>
      * </ul>
      *
-     * The id is only valid for resolution smaller less or equal 18.
+     * The ID is only valid for resolution smaller less or equal 18.
      *
-     * @return id of the cell
+     * @return ID of the cell
      */
-    public Long getId() {
+    public Long getID() {
         if (this._id == null) {
             long sgnLat = (this._lat < 0 && Math.abs(this._lat) >= GridCell._precisionPerDefinition) ? 20 : 0;
             long sgnLon = (this._lon < 0 && Math.abs(this._lon) >= GridCell._precisionPerDefinition && 180 - Math.abs(this._lon) >= GridCell._precisionPerDefinition) ? 40 : 0;
@@ -91,16 +91,16 @@ public class GridCell implements Comparable<GridCell> {
     }
 
     public boolean equals(Object o) {
-        return (o instanceof GridCell) && ((GridCell) o).getId().equals(this.getId());
+        return (o instanceof GridCell) && ((GridCell) o).getID().equals(this.getID());
     }
 
     public int hashCode() {
-        return Long.hashCode(this.getId());
+        return Long.hashCode(this.getID());
     }
 
     @Override
     public String toString() {
-        return String.format("resolution %d lat %f lon %f - %d", this._resolution, this._lat, this._lon, this.getId());
+        return String.format("resolution %d lat %f lon %f - %d", this._resolution, this._lat, this._lon, this.getID());
     }
 
     @Override

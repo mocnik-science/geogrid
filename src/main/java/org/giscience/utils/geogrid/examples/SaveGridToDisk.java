@@ -8,7 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
- * Run this class in order to compute the number of cells in a grid for a given resolution, and check for non-unique ids
+ * Run this class in order to compute the number of cells in a grid for a given resolution, and check for non-unique IDs
  * per face of the icosahedron.
  *
  * The output is written to result.txt, the result, to result.log.
@@ -28,7 +28,7 @@ public class SaveGridToDisk {
             long x = System.currentTimeMillis();
 
             ISEA3H g = new ISEA3H(r);
-            g.cellIds(String.format("%s/grid-%d", path, r));
+            g.cellIDs(String.format("%s/grid-%d", path, r));
 
             SaveGridToDisk._log("computation:  %d ms", System.currentTimeMillis() - x);
             x = System.currentTimeMillis();

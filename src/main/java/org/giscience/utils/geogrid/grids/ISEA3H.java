@@ -56,8 +56,8 @@ public class ISEA3H {
     private static final double _precision = 1e-9;
     private final ISEAProjection _projection = new ISEAProjection();
     private final int _resolution; // resolution - 1
-    private final long _numberOfHexagonCells;
-    private final int _numberOfPentagonCells = 12;
+    private final long _numberOfHexagonalCells;
+    private final int _numberOfPentagonalCells = 12;
     private final double _l0; // length of the triangle base at resolution 0
     private final double _inverseSqrt3l0; // 1 / \sqrt{3} * l_0
     private final double _l; // length of the triangle base at the given resolution
@@ -80,9 +80,9 @@ public class ISEA3H {
     public ISEA3H(int resolution, boolean rotatedProjection) {
         if (rotatedProjection) this._projection.setOrientationSymmetricEquator();
         this._resolution = resolution - 1;
-        long numberOfHexagonCells = 1;
-        for (int i = 0; i < this._resolution; i++) numberOfHexagonCells = 3 * numberOfHexagonCells + 1;
-        this._numberOfHexagonCells = 20 * numberOfHexagonCells;
+        long numberOfHexagonalCells = 1;
+        for (int i = 0; i < this._resolution; i++) numberOfHexagonalCells = 3 * numberOfHexagonalCells + 1;
+        this._numberOfHexagonalCells = 20 * numberOfHexagonalCells;
         this._l0 = this._projection.lengthOfTriangleBase();
         this._inverseSqrt3l0 = this._inverseSqrt3 * this._l0;
         this._l = Math.pow(this._inverseSqrt3, this._resolution) * this._l0;
@@ -120,21 +120,21 @@ public class ISEA3H {
     /**
      * @return diameter of a hexagonal cell on the icosahedron
      */
-    public double diameterOfHexagonCellOnIcosahedron() {
+    public double diameterOfHexagonalCellOnIcosahedron() {
         return this._l23;
     }
 
     /**
      * @return length of a side of a hexagonal cell on the icosahedron
      */
-    public double lengthOfASideOfHexagonCellOnIcosahedron() {
+    public double lengthOfASideOfHexagonalCellOnIcosahedron() {
         return this._l / 3;
     }
 
     /**
      * @return lower bound for the length of a side of a hexagonal cell on the sphere
      */
-    public double lowerBoundForLengthOfASideOfHexagonCellOnSphere() {
+    public double lowerBoundForLengthOfASideOfHexagonalCellOnSphere() {
         return this._projection.sphericalDistanceFromCenterToVerticesOnSphere() * WGS84.radiusAuthalic * 2 * Math.PI / (360 * Math.sqrt(Math.pow(3, this._resolution) * 5));
     }
 
@@ -145,7 +145,7 @@ public class ISEA3H {
      * @return area of a hexagonal cell
      */
     public double areaOfAHexagonalCell() {
-        return WGS84.areaOfEarth / (this._numberOfHexagonCells + 5 / 6. * this._numberOfPentagonCells);
+        return WGS84.areaOfEarth / (this._numberOfHexagonalCells + 5 / 6. * this._numberOfPentagonalCells);
     }
 
     /**
@@ -161,15 +161,15 @@ public class ISEA3H {
     /**
      * @return number of hexagonal cells
      */
-    public long numberOfHexagonCells() {
-        return this._numberOfHexagonCells;
+    public long numberOfHexagonalCells() {
+        return this._numberOfHexagonalCells;
     }
 
     /**
      * @return number of pentagonal cells
      */
-    public int numberOfPentagonCells() {
-        return this._numberOfPentagonCells;
+    public int numberOfPentagonalCells() {
+        return this._numberOfPentagonalCells;
     }
 
     /**
@@ -285,27 +285,27 @@ public class ISEA3H {
     }
 
     /**
-     * Returns cell ids.
+     * Returns cell IDs.
      *
-     * Same as cells, apart that this method returns only ids and is much more memory efficient.
+     * Same as cells, apart that this method returns only IDs and is much more memory efficient.
      *
-     * @return ids of cells
+     * @return IDs of cells
      */
-    public Collection<Long> cellIds() throws Exception {
-        return this.cellIdsForBound(-90, 90, -180, 180);
+    public Collection<Long> cellIDs() throws Exception {
+        return this.cellIDsForBound(-90, 90, -180, 180);
     }
 
     /**
-     * Save cell ids to disk.
+     * Save cell IDs to disk.
      *
-     * For each face, one file is created. The cell ids in the different files are not unique and non-unique ids need to
+     * For each face, one file is created. The cell IDs in the different files are not unique and non-unique IDs need to
      * be removed.
      *
      * @param file prefix of the files
-     * @return ids of cells
+     * @return IDs of cells
      */
-    public void cellIds(String file) throws Exception {
-        this._cells(new CellAggregatorByCellIdsToFile(file)).closeFile();
+    public void cellIDs(String file) throws Exception {
+        this._cells(new CellAggregatorByCellIDsToFile(file)).closeFile();
     }
 
     /**
@@ -327,19 +327,19 @@ public class ISEA3H {
     }
 
     /**
-     * Returns cell ids that are inside the bounds, or at least very near.
+     * Returns cell IDs that are inside the bounds, or at least very near.
      *
-     * Same as cellsForBound, apart that this method returns only ids and is much more memory efficient.
+     * Same as cellsForBound, apart that this method returns only IDs and is much more memory efficient.
      *
      * @param lat0
      * @param lat1
      * @param lon0
      * @param lon1
-     * @return ids of cells inside the bounds
+     * @return IDs of cells inside the bounds
      */
-    public Collection<Long> cellIdsForBound(double lat0, double lat1, double lon0, double lon1) throws Exception {
-        if (lat1 - lat0 >= 180 && lon1 - lon0 >= 360) return this._cells(new CellAggregatorByCellIds()).getCellIds();
-        else return this._cellsForBound(new CellAggregatorByCellIds(), lat0, lat1, lon0, lon1).cellAggregator.getCellIds();
+    public Collection<Long> cellIDsForBound(double lat0, double lat1, double lon0, double lon1) throws Exception {
+        if (lat1 - lat0 >= 180 && lon1 - lon0 >= 360) return this._cells(new CellAggregatorByCellIDs()).getCellIDs();
+        else return this._cellsForBound(new CellAggregatorByCellIDs(), lat0, lat1, lon0, lon1).cellAggregator.getCellIDs();
     }
 
     private <T extends CellAggregator> ResultCellForBound<T> _cellsForBound(T ca, double lat0, double lat1, double lon0, double lon1) throws Exception {
@@ -534,12 +534,12 @@ public class ISEA3H {
         }
     }
 
-    private class CellAggregatorByCellIds implements CellAggregator<CellAggregatorByCellIds> {
+    private class CellAggregatorByCellIDs implements CellAggregator<CellAggregatorByCellIDs> {
         private Set<Long> _cells = new HashSet();
 
         @Override
-        public CellAggregator<CellAggregatorByCellIds> cloneEmpty() {
-            return new CellAggregatorByCellIds();
+        public CellAggregator<CellAggregatorByCellIDs> cloneEmpty() {
+            return new CellAggregatorByCellIDs();
         }
 
         @Override
@@ -548,8 +548,8 @@ public class ISEA3H {
         }
 
         @Override
-        public void addAll(CellAggregatorByCellIds ca) {
-            this._cells.addAll(ca.getCellIds());
+        public void addAll(CellAggregatorByCellIDs ca) {
+            this._cells.addAll(ca.getCellIDs());
         }
 
         @Override
@@ -562,26 +562,26 @@ public class ISEA3H {
             return this._cells.contains(c.getId());
         }
 
-        public Set<Long> getCellIds() {
+        public Set<Long> getCellIDs() {
             return this._cells;
         }
     }
 
-    private class CellAggregatorByCellIdsToFile implements CellAggregator<CellAggregatorByCellIdsToFile> {
+    private class CellAggregatorByCellIDsToFile implements CellAggregator<CellAggregatorByCellIDsToFile> {
         private ArrayList<Long> _cells = new ArrayList<>();
-        private List<CellAggregatorByCellIdsToFile> _caList = new ArrayList();
+        private List<CellAggregatorByCellIDsToFile> _caList = new ArrayList();
         private final String _filename;
         private Integer _face = null;
         private int _chunk = 0;
         private static final int _chunkSize = 300000000;
 
-        public CellAggregatorByCellIdsToFile(String filename) {
+        public CellAggregatorByCellIDsToFile(String filename) {
             this._filename = filename;
         }
 
         @Override
-        public CellAggregator<CellAggregatorByCellIdsToFile> cloneEmpty() {
-            return new CellAggregatorByCellIdsToFile(this._filename);
+        public CellAggregator<CellAggregatorByCellIDsToFile> cloneEmpty() {
+            return new CellAggregatorByCellIDsToFile(this._filename);
         }
 
         @Override
@@ -592,7 +592,7 @@ public class ISEA3H {
         }
 
         @Override
-        public void addAll(CellAggregatorByCellIdsToFile ca) {
+        public void addAll(CellAggregatorByCellIDsToFile ca) {
             this._caList.add(ca);
         }
 
@@ -622,7 +622,7 @@ public class ISEA3H {
 
         public void closeFile() throws IOException {
             if (this._cells.size() > 0) this._writeChunkToFile();
-            for (CellAggregatorByCellIdsToFile ca : this._caList) ca.closeFile();
+            for (CellAggregatorByCellIDsToFile ca : this._caList) ca.closeFile();
         }
     }
 
@@ -659,8 +659,8 @@ public class ISEA3H {
         }
         FaceCoordinates southWest = this._projection.sphereToIcosahedron(new GeoCoordinates(lat0, lon0));
         FaceCoordinates northEast = this._projection.sphereToIcosahedron(new GeoCoordinates(lat1, lon1));
-        GeoCoordinates southWest2 = this._projection.icosahedronToSphere(new FaceCoordinates(southWest.getFace(), southWest.getX() - this.diameterOfHexagonCellOnIcosahedron() / 2, southWest.getY() - this.diameterOfHexagonCellOnIcosahedron() / 2));
-        GeoCoordinates northEast2 = this._projection.icosahedronToSphere(new FaceCoordinates(northEast.getFace(), northEast.getX() - this.diameterOfHexagonCellOnIcosahedron() / 2, northEast.getY() - this.diameterOfHexagonCellOnIcosahedron() / 2));
+        GeoCoordinates southWest2 = this._projection.icosahedronToSphere(new FaceCoordinates(southWest.getFace(), southWest.getX() - this.diameterOfHexagonalCellOnIcosahedron() / 2, southWest.getY() - this.diameterOfHexagonalCellOnIcosahedron() / 2));
+        GeoCoordinates northEast2 = this._projection.icosahedronToSphere(new FaceCoordinates(northEast.getFace(), northEast.getX() - this.diameterOfHexagonalCellOnIcosahedron() / 2, northEast.getY() - this.diameterOfHexagonalCellOnIcosahedron() / 2));
         List<Double> l = new ArrayList<>();
         l.add(Math.abs(southWest2.getLat() - lat0));
         l.add(Math.abs(southWest2.getLon() - lon0));

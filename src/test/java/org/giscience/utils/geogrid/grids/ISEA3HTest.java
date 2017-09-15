@@ -41,10 +41,10 @@ public class ISEA3HTest {
         this._numberOfCellsByNumber(15, 143489060);
         this._numberOfCellsByNumber(16, 430467200);
     }
-    public void _numberOfCellsByNumber(int resolution, int numberOfHexagonCells) {
+    public void _numberOfCellsByNumber(int resolution, int numberOfHexagonalCells) {
         ISEA3H grid = new ISEA3H(resolution);
-        assertEquals(grid.numberOfHexagonCells(), numberOfHexagonCells);
-        assertEquals(grid.numberOfPentagonCells(), 12);
+        assertEquals(grid.numberOfHexagonalCells(), numberOfHexagonalCells);
+        assertEquals(grid.numberOfPentagonalCells(), 12);
     }
 
     @Test
@@ -53,7 +53,7 @@ public class ISEA3HTest {
     }
     public void _numberOfCellsByArea(int resolution) {
         ISEA3H grid = new ISEA3H(resolution);
-        assertTrue(grid.numberOfHexagonCells() * grid.areaOfAHexagonCell() + grid.numberOfPentagonCells() * grid.areaOfAPentagonalCell() - WGS84.areaOfEarth < WGS84.areaOfEarth * this._precision2);
+        assertTrue(grid.numberOfHexagonalCells() * grid.areaOfAHexagonalCell() + grid.numberOfPentagonalCells() * grid.areaOfAPentagonalCell() - WGS84.areaOfEarth < WGS84.areaOfEarth * this._precision2);
     }
 
     @Test
@@ -63,7 +63,7 @@ public class ISEA3HTest {
     public void _numberOfCellsByGrid(int resolution) throws Exception {
         ISEA3H grid = new ISEA3H(resolution);
         long cells = grid.cells().size();
-        long cellsExpected = grid.numberOfHexagonCells() + grid.numberOfPentagonCells();
+        long cellsExpected = grid.numberOfHexagonalCells() + grid.numberOfPentagonalCells();
         System.out.format("resolution %d - %d - %d\n", resolution, cells, cellsExpected);
         assertEquals(cells, cellsExpected);
     }
@@ -79,7 +79,7 @@ public class ISEA3HTest {
         ISEA3H grid = new ISEA3H(resolution);
         for (int i = 0; i < this._iterations; i++) {
             FaceCoordinates c = new FaceCoordinates(1, Math.random() * 100 - 50, Math.random() * 100 - 50);
-            assertTrue(c.distanceTo(grid.cellForLocation(c)) <= grid.diameterOfHexagonCellOnIcosahedron() / 2. + this._precision);
+            assertTrue(c.distanceTo(grid.cellForLocation(c)) <= grid.diameterOfHexagonalCellOnIcosahedron() / 2. + this._precision);
         }
     }
 }

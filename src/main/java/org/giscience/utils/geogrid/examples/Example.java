@@ -49,10 +49,10 @@ public class Example {
         ISEA3H g = new ISEA3H(14);
 
         // print properties of the grid
-        System.out.format("number of hexagon cells: %d%n", g.numberOfHexagonCells());
-        System.out.format("number of pentagon cells: %d%n", g.numberOfPentagonCells());
-        System.out.format("diameter of a hexagon cell: %f%n", g.diameterOfHexagonCellOnIcosahedron());
-        System.out.format("area of a hexagon cell: %f%n", g.areaOfAHexagonCell());
+        System.out.format("number of hexagon cells: %d%n", g.numberOfHexagonalCells());
+        System.out.format("number of pentagon cells: %d%n", g.numberOfPentagonalCells());
+        System.out.format("diameter of a hexagon cell: %f%n", g.diameterOfHexagonalCellOnIcosahedron());
+        System.out.format("area of a hexagon cell: %f%n", g.areaOfAHexagonalCell());
         System.out.println("------");
 
         // get cells in given bounds
