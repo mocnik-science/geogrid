@@ -544,7 +544,7 @@ public class ISEA3H {
 
         @Override
         public void add(int face, GridCell c) {
-            this._cells.add(c.getId());
+            this._cells.add(c.getID());
         }
 
         @Override
@@ -559,7 +559,7 @@ public class ISEA3H {
 
         @Override
         public boolean contains(GridCell c) {
-            return this._cells.contains(c.getId());
+            return this._cells.contains(c.getID());
         }
 
         public Set<Long> getCellIDs() {
@@ -587,7 +587,7 @@ public class ISEA3H {
         @Override
         public void add(int face, GridCell c) throws IOException {
             this._face = face;
-            this._cells.add(c.getId());
+            this._cells.add(c.getID());
             if (this._cells.size() >= this._chunkSize) this._writeChunkToFile();
         }
 
