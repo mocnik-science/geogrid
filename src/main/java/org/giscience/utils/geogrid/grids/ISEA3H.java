@@ -102,21 +102,21 @@ public class ISEA3H {
     }
 
     /**
-     * @return diameter of a hexagonal cell on the icosahedron
+     * @return diameter of a hexagonal cell on the icosahedron, in kilometres
      */
     public double diameterOfHexagonalCellOnIcosahedron() {
         return this._l23;
     }
 
     /**
-     * @return length of a side of a hexagonal cell on the icosahedron
+     * @return length of a side of a hexagonal cell on the icosahedron, in kilometres
      */
     public double lengthOfASideOfHexagonalCellOnIcosahedron() {
         return this._l / 3;
     }
 
     /**
-     * @return lower bound for the length of a side of a hexagonal cell on the sphere
+     * @return lower bound for the length of a side of a hexagonal cell on the sphere, in kilometres
      */
     public double lowerBoundForLengthOfASideOfHexagonalCellOnSphere() {
         return this._projection.sphericalDistanceFromCenterToVerticesOnSphere() * WGS84.radiusAuthalic * 2 * Math.PI / (360 * Math.sqrt(Math.pow(3, this._resolution) * 5));
@@ -126,7 +126,7 @@ public class ISEA3H {
      * Returns the area of a hexagonal cell. The cells should all have the same area by construction, because the ISEA
      * projection is equal-area.
      *
-     * @return area of a hexagonal cell
+     * @return area of a hexagonal cell, in square kilometres
      */
     public double areaOfAHexagonalCell() {
         return WGS84.areaOfEarth / (this._numberOfHexagonalCells + 5 / 6. * this._numberOfPentagonalCells);
@@ -136,7 +136,7 @@ public class ISEA3H {
      * Returns the area of a pentagonal cell. The cells should all have the same area by construction, because the ISEA
      * projection is equal-area.
      *
-     * @return area of a pentagonal cell
+     * @return area of a pentagonal cell, in in kilometres
      */
     public double areaOfAPentagonalCell() {
         return 5 / 6. * this.areaOfAHexagonalCell();

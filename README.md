@@ -141,11 +141,11 @@ Many properties of the ISEA3H DGGS are provided by an instance of the `ISEA3H`. 
 
 | Function | Description |
 | -------- | ----------- |
-| `diameterOfHexagonalCellOnIcosahedron()` | diameter of a hexagonal cell on the icosahedron |
-| `lengthOfASideOfHexagonalCellOnIcosahedron()` | length of a side of a hexagonal cell on the icosahedron |
-| `lowerBoundForLengthOfASideOfHexagonalCellOnSphere()` | lower bound for the length of a side of a hexagonal cell on the sphere |
-| `areaOfAHexagonalCell()` | area of a hexagonal cell; the cells have all the same area by construction, because the ISEA projection is equal-area |
-| `areaOfAPentagonalCell()` | area of a pentagonal cell; the cells have all the same area by construction, because the ISEA projection is equal-area |
+| `diameterOfHexagonalCellOnIcosahedron()` | diameter of a hexagonal cell on the icosahedron, in kilometres |
+| `lengthOfASideOfHexagonalCellOnIcosahedron()` | length of a side of a hexagonal cell on the icosahedron, in kilometres |
+| `lowerBoundForLengthOfASideOfHexagonalCellOnSphere()` | lower bound for the length of a side of a hexagonal cell on the sphere, in kilometres |
+| `areaOfAHexagonalCell()` | area of a hexagonal cell; the cells have all the same area by construction, because the ISEA projection is equal-area, in square kilometres |
+| `areaOfAPentagonalCell()` | area of a pentagonal cell; the cells have all the same area by construction, because the ISEA projection is equal-area, in square kilometres |
 | `numberOfHexagonalCells()` | number of hexagonal cells |
 | `numberOfPentagonalCells()` | number of pentagonal cells |
 
