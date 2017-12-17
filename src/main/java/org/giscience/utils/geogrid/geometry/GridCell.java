@@ -15,7 +15,7 @@ public class GridCell implements Comparable<GridCell> {
     private Long _id = null;
 
     public GridCell(int resolution, double lat, double lon, boolean isPentagon) throws Exception {
-        if (resolution < 0 || resolution > 18) throw new Exception("resolution must be between 0 and 18");
+        if (resolution < 0 || resolution > 32) throw new Exception("resolution must be between 0 and 32");
         this._resolution = resolution;
         if (lat < -90 || lat > 90) throw new Exception("invalid latitude");
         if (lat < -90 + GridCell._precisionPerDefinition || lat > 90 - GridCell._precisionPerDefinition) lon = 0;
