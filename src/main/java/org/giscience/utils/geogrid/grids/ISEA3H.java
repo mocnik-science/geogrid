@@ -7,6 +7,7 @@ import org.giscience.utils.geogrid.geo.WGS84;
 import org.giscience.utils.geogrid.geometry.FaceCoordinates;
 import org.giscience.utils.geogrid.geometry.GeoCoordinates;
 import org.giscience.utils.geogrid.geometry.GridCell;
+import org.giscience.utils.geogrid.identifier.GridCellIDType;
 import org.giscience.utils.geogrid.projections.ISEAProjection;
 
 import java.io.BufferedWriter;
@@ -276,7 +277,10 @@ public class ISEA3H {
      * @return IDs of cells
      */
     public Collection<Long> cellIDs() throws Exception {
-        return this.cellIDsForBound(-90, 90, -180, 180);
+        return this.cellIDs(GridCellIDType.NON_ADAPTIVE);
+    }
+    public Collection<Long> cellIDs(GridCellIDType gridCellIDType) throws Exception {
+        return this.cellIDsForBound(-90, 90, -180, 180, gridCellIDType);
     }
 
     /**
@@ -289,7 +293,10 @@ public class ISEA3H {
      * @return IDs of cells
      */
     public void cellIDs(String file) throws Exception {
-        this._cells(new CellAggregatorByCellIDsToFile(file)).closeFile();
+        this.cellIDs(file, GridCellIDType.NON_ADAPTIVE);
+    }
+    public void cellIDs(String file, GridCellIDType gridCellIDType) throws Exception {
+        this._cells(new CellAggregatorByCellIDsToFile(file, gridCellIDType)).closeFile();
     }
 
     /**
@@ -322,8 +329,11 @@ public class ISEA3H {
      * @return IDs of cells inside the bounds
      */
     public Collection<Long> cellIDsForBound(double lat0, double lat1, double lon0, double lon1) throws Exception {
-        if (lat1 - lat0 >= 180 && lon1 - lon0 >= 360) return this._cells(new CellAggregatorByCellIDs()).getCellIDs();
-        else return this._cellsForBound(new CellAggregatorByCellIDs(), lat0, lat1, lon0, lon1).cellAggregator.getCellIDs();
+        return this.cellIDsForBound(lat0, lat1, lon0, lon1, GridCellIDType.NON_ADAPTIVE);
+    }
+    public Collection<Long> cellIDsForBound(double lat0, double lat1, double lon0, double lon1, GridCellIDType gridCellIDType) throws Exception {
+        if (lat1 - lat0 >= 180 && lon1 - lon0 >= 360) return this._cells(new CellAggregatorByCellIDs(gridCellIDType)).getCellIDs();
+        else return this._cellsForBound(new CellAggregatorByCellIDs(gridCellIDType), lat0, lat1, lon0, lon1).cellAggregator.getCellIDs();
     }
 
     private <T extends CellAggregator> ResultCellForBound<T> _cellsForBound(T ca, double lat0, double lat1, double lon0, double lon1) throws Exception {
@@ -520,15 +530,20 @@ public class ISEA3H {
 
     private class CellAggregatorByCellIDs implements CellAggregator<CellAggregatorByCellIDs> {
         private Set<Long> _cells = new HashSet();
+        private GridCellIDType _gridCellIDType;
+
+        public CellAggregatorByCellIDs(GridCellIDType gridCellIDType) {
+            this._gridCellIDType = gridCellIDType;
+        }
 
         @Override
         public CellAggregator<CellAggregatorByCellIDs> cloneEmpty() {
-            return new CellAggregatorByCellIDs();
+            return new CellAggregatorByCellIDs(this._gridCellIDType);
         }
 
         @Override
         public void add(int face, GridCell c) {
-            this._cells.add(c.getID());
+            this._cells.add(c.getID(this._gridCellIDType));
         }
 
         @Override
@@ -543,7 +558,7 @@ public class ISEA3H {
 
         @Override
         public boolean contains(GridCell c) {
-            return this._cells.contains(c.getID());
+            return this._cells.contains(c.getID(this._gridCellIDType));
         }
 
         public Set<Long> getCellIDs() {
@@ -555,23 +570,25 @@ public class ISEA3H {
         private ArrayList<Long> _cells = new ArrayList<>();
         private List<CellAggregatorByCellIDsToFile> _caList = new ArrayList();
         private final String _filename;
+        private GridCellIDType _gridCellIDType;
         private Integer _face = null;
         private int _chunk = 0;
         private static final int _chunkSize = 300000000;
 
-        public CellAggregatorByCellIDsToFile(String filename) {
+        public CellAggregatorByCellIDsToFile(String filename, GridCellIDType gridCellIDType) {
             this._filename = filename;
+            this._gridCellIDType = gridCellIDType;
         }
 
         @Override
         public CellAggregator<CellAggregatorByCellIDsToFile> cloneEmpty() {
-            return new CellAggregatorByCellIDsToFile(this._filename);
+            return new CellAggregatorByCellIDsToFile(this._filename, this._gridCellIDType);
         }
 
         @Override
         public void add(int face, GridCell c) throws IOException {
             this._face = face;
-            this._cells.add(c.getID());
+            this._cells.add(c.getID(this._gridCellIDType));
             if (this._cells.size() >= this._chunkSize) this._writeChunkToFile();
         }
 
