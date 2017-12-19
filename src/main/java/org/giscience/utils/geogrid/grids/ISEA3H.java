@@ -6,8 +6,8 @@ import org.giscience.utils.geogrid.generic.Tuple;
 import org.giscience.utils.geogrid.geo.WGS84;
 import org.giscience.utils.geogrid.geometry.FaceCoordinates;
 import org.giscience.utils.geogrid.geometry.GeoCoordinates;
-import org.giscience.utils.geogrid.geometry.GridCell;
-import org.giscience.utils.geogrid.identifier.GridCellIDType;
+import org.giscience.utils.geogrid.cells.GridCell;
+import org.giscience.utils.geogrid.cells.GridCellIDType;
 import org.giscience.utils.geogrid.projections.ISEAProjection;
 
 import java.io.BufferedWriter;
@@ -40,10 +40,10 @@ import java.util.concurrent.Future;
 public class ISEA3H {
     private static final double _precision = 1e-9;
     private final ISEAProjection _projection = new ISEAProjection();
-    private final int _resolution; // resolution - 1
+    private final int _resolution; // resolution
     private final long _numberOfHexagonalCells;
     private final int _numberOfPentagonalCells = 12;
-    private final double _l0; // length of the triangle base at resolution 0
+    private final double _l0; // length of the triangle base at resolution 1
     private final double _inverseSqrt3l0; // 1 / \sqrt{3} * l_0
     private final double _l; // length of the triangle base at the given resolution
     private final double _l2; // l / 2
@@ -64,13 +64,13 @@ public class ISEA3H {
 
     public ISEA3H(int resolution, boolean rotatedProjection) {
         if (rotatedProjection) this._projection.setOrientationSymmetricEquator();
-        this._resolution = resolution - 1;
+        this._resolution = resolution;
         long numberOfHexagonalCells = 1;
-        for (int i = 0; i < this._resolution; i++) numberOfHexagonalCells = 3 * numberOfHexagonalCells + 1;
+        for (int i = 1; i < this._resolution; i++) numberOfHexagonalCells = 3 * numberOfHexagonalCells + 1;
         this._numberOfHexagonalCells = 20 * numberOfHexagonalCells;
         this._l0 = this._projection.lengthOfTriangleBase();
         this._inverseSqrt3l0 = this._inverseSqrt3 * this._l0;
-        this._l = Math.pow(this._inverseSqrt3, this._resolution) * this._l0;
+        this._l = Math.pow(this._inverseSqrt3, this._resolution - 1) * this._l0;
         this._l2 = this._l / 2.;
         this._l6 = this._l / 6.;
         this._l23 = this._l * 2 / 3.;
@@ -120,7 +120,7 @@ public class ISEA3H {
      * @return lower bound for the length of a side of a hexagonal cell on the sphere, in kilometres
      */
     public double lowerBoundForLengthOfASideOfHexagonalCellOnSphere() {
-        return this._projection.sphericalDistanceFromCenterToVerticesOnSphere() * WGS84.radiusAuthalic * 2 * Math.PI / (360 * Math.sqrt(Math.pow(3, this._resolution) * 5));
+        return this._projection.sphericalDistanceFromCenterToVerticesOnSphere() * WGS84.radiusAuthalic * 2 * Math.PI / (360 * Math.sqrt(Math.pow(3, this._resolution - 1) * 5));
     }
 
     /**
@@ -446,7 +446,7 @@ public class ISEA3H {
         // compute
         FaceCoordinates fc;
         GeoCoordinates gc;
-        int nyMax = (int) Math.round((notSwapped ? Math.pow(3, this._resolution / 2.) : 2 * Math.pow(3, (this._resolution - 1) / 2.)));
+        int nyMax = (int) Math.round((notSwapped ? Math.pow(3, (this._resolution - 1) / 2.) : 2 * Math.pow(3, (this._resolution - 2) / 2.)));
         int nyMin = -(int) (notSwapped ? (nyMax - 1) / 2. : nyMax / 2.);
         int nxMin = 0;
         int nxMax = 0;
@@ -686,6 +686,6 @@ public class ISEA3H {
     }
 
     private boolean _coordinatesNotSwapped() {
-        return this._resolution % 2 == 0;
+        return this._resolution % 2 != 0;
     }
 }
