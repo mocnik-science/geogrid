@@ -197,8 +197,7 @@ public class ISEA3H {
             int nyCenter12 = (int) Math.round(((nxCenter % 2 == 0) ? y : y - this._inverseSqrt3l2) / this._inverseSqrt3l);
             double yCenter12 = nyCenter12 * this._inverseSqrt3l + ((nxCenter % 2 == 0) ? 0 : this._inverseSqrt3l2);
             return this._faceCoordinatesSwapByResolution(c.getFace(), xCenter, yCenter12);
-        }
-        else {
+        } else {
             int nyCenter1 = (int) Math.round(y / this._inverseSqrt3l);
             double yCenter1 = nyCenter1 * this._inverseSqrt3l;
             int nyCenter2 = (int) Math.round((y - this._inverseSqrt3l2) / this._inverseSqrt3l);
