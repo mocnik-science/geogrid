@@ -1,11 +1,6 @@
-package org.giscience.utils.geogrid.geometry;
+package org.giscience.utils.geogrid.cells;
 
-import org.giscience.utils.geogrid.geo.WGS84;
-import org.giscience.utils.geogrid.grids.ISEA3H;
-import org.giscience.utils.geogrid.identifier.GridCellIDType;
-
-import java.util.Map;
-import java.util.TreeMap;
+import org.giscience.utils.geogrid.geometry.GeoCoordinates;
 
 /**
  * Grid cell
@@ -76,26 +71,13 @@ public class GridCell implements Comparable<GridCell> {
         return this.getID(GridCellIDType.NON_ADAPTIVE);
     }
 
-    public int tmp(GridCellIDType gridCellIDType) {
-        return GridCellMetaData.getInstance().numberOfConsecutiveDigits(this, gridCellIDType);
-    }
-
     public Long getID(GridCellIDType gridCellIDType) {
         if (this._id == null) {
-            int numberOfConsecutiveDigits = GridCellMetaData.getInstance().numberOfConsecutiveDigits(this, gridCellIDType);
-//             numberOfConsecutiveDigits = 1;
+            int numberOfConsecutiveDigits = GridCellMetaData.getInstance().numberOfConsecutiveDigits(this.getResolution(), gridCellIDType);
             double precisionPerDefinition = .5 * Math.pow(10, -numberOfConsecutiveDigits);
-            double lon = this._lon;
-            if (this._lat < -90 + precisionPerDefinition || this._lat > 90 - precisionPerDefinition) lon = 0;
-if (false && 78.5 < Math.abs(lon) && Math.abs(lon)< 79) {
-    System.out.println("======");
-    System.out.println(lon);
-    System.out.println(Math.round(lon * Math.pow(10, 1)));
-    System.out.println(Math.round((lon + this._precision) * Math.pow(10, 1)));
-}
             long sgnLat = (this._lat < 0 && Math.abs(this._lat) >= precisionPerDefinition) ? 23 : 0;
-            long sgnLon = (lon < 0 && Math.abs(lon) >= precisionPerDefinition && 180 - Math.abs(lon) >= precisionPerDefinition) ? 46 : 0;
-            this._id = (this._isPentagon ? -1 : 1) * ((this._resolution.longValue() + sgnLat + sgnLon) * (long) Math.pow(10, 2 * numberOfConsecutiveDigits + 5) + Math.abs(Math.round((this._lat + this._precision) * Math.pow(10, numberOfConsecutiveDigits))) * (long) Math.pow(10, numberOfConsecutiveDigits + 3) + Math.abs(Math.round((lon + this._precision) * Math.pow(10, numberOfConsecutiveDigits))));
+            long sgnLon = (this._lon < 0 && Math.abs(this._lon) >= precisionPerDefinition && 180 - Math.abs(this._lon) >= precisionPerDefinition) ? 46 : 0;
+            this._id = (this._isPentagon ? -1 : 1) * ((this._resolution.longValue() + sgnLat + sgnLon) * (long) Math.pow(10, 2 * numberOfConsecutiveDigits + 5) + Math.abs(Math.round((this._lat + this._precision) * Math.pow(10, numberOfConsecutiveDigits))) * (long) Math.pow(10, numberOfConsecutiveDigits + 3) + Math.abs(Math.round((this._lon + this._precision) * Math.pow(10, numberOfConsecutiveDigits))));
         }
         return this._id;
     }
@@ -120,36 +102,5 @@ if (false && 78.5 < Math.abs(lon) && Math.abs(lon)< 79) {
         d = (Math.abs(this._lat - o._lat) < GridCell._precision) ? 0 : Double.compare(this._lat, o._lat);
         if (d != 0) return d;
         return (Math.abs(this._lon - o._lon) < GridCell._precision) ? 0 : Double.compare(this._lon, o._lon);
-    }
-}
-
-class GridCellMetaData {
-    private static GridCellMetaData _gridCellMetaData = new GridCellMetaData();
-    private static final int _maxNumberOfConsecutiveDigits = 6;
-    private Map<Integer, Integer> _numberOfConsecutiveDigits = new TreeMap();
-
-    private GridCellMetaData() {}
-
-    public static GridCellMetaData getInstance() {
-        return GridCellMetaData._gridCellMetaData;
-    }
-
-    public int numberOfConsecutiveDigits(GridCell gridCell, GridCellIDType gridCellIDType) {
-        if (gridCellIDType == GridCellIDType.NON_ADAPTIVE) return this._maxNumberOfConsecutiveDigits;
-        int nocd;
-        if (this._numberOfConsecutiveDigits.containsKey(gridCell.getResolution())) nocd = this._numberOfConsecutiveDigits.get(gridCell.getResolution());
-        else {
-            double distBetweenCells = 2 * (new ISEA3H(gridCell.getResolution())).lowerBoundForLengthOfASideOfHexagonalCellOnSphere();
-            nocd = (int)Math.ceil(-Math.log10(distBetweenCells / (2 * Math.PI * WGS84.radiusAuthalic / 360)));
-            this._numberOfConsecutiveDigits.put(gridCell.getResolution(), nocd);
-        }
-        switch (gridCellIDType) {
-            case ADAPTIVE_UNIQUE:
-                return Math.max(Math.min(nocd, this._maxNumberOfConsecutiveDigits), 0);
-            case ADAPTIVE_1_PERCENT:
-                return Math.max(Math.min(nocd + 2, this._maxNumberOfConsecutiveDigits), 0);
-            default:
-                return this._maxNumberOfConsecutiveDigits;
-        }
     }
 }
