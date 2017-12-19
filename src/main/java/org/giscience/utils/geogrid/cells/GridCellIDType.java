@@ -1,5 +1,8 @@
-package org.giscience.utils.geogrid.identifier;
+package org.giscience.utils.geogrid.cells;
 
+/**
+ * ID type for a grid cell
+ */
 public enum GridCellIDType {
     NON_ADAPTIVE,
     ADAPTIVE_UNIQUE,
