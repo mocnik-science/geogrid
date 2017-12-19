@@ -1,11 +1,10 @@
 package org.giscience.utils.geogrid.examples;
 
 import org.giscience.utils.geogrid.grids.ISEA3H;
+import org.giscience.utils.geogrid.cells.GridCellIDType;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 /**
  * Run this class in order to compute the number of cells in a grid for a given resolution, and check for non-unique IDs
@@ -28,14 +27,14 @@ public class SaveGridToDisk {
             long x = System.currentTimeMillis();
 
             ISEA3H g = new ISEA3H(r);
-            g.cellIDs(String.format("%s/grid-%d", path, r));
+            g.cellIDs(String.format("%s/grid-%d", path, r), GridCellIDType.NON_ADAPTIVE);
 
             SaveGridToDisk._log("computation:  %d ms", System.currentTimeMillis() - x);
             x = System.currentTimeMillis();
 
             SaveGridToDisk._exec("echo \"# resolution %d\" >> result.txt", r);
-            SaveGridToDisk._exec("sort --numeric-sort --merge grid-%d.* --unique | wc -l >> result.txt", r);
-            SaveGridToDisk._exec("for i in {0..19}; do sort --numeric-sort --merge grid-%d.face$i.* | uniq -d |  wc -l; done >> result.txt", r);
+            SaveGridToDisk._exec("sort --numeric-sort --merge --batch-size=100000 grid-%d.* --unique | wc -l >> result.txt", r);
+            SaveGridToDisk._exec("for i in {0..19}; do sort --numeric-sort --merge --batch-size=100000 grid-%d.face$i.* | uniq -d |  wc -l; done >> result.txt", r);
             SaveGridToDisk._exec("rm grid-%d.*", r);
 
             SaveGridToDisk._log("evaluation:   %d ms", System.currentTimeMillis() - x);
