@@ -12,8 +12,8 @@ import java.util.TreeMap;
  * @author Franz-Benjamin Mocnik
  */public class GridCellMetaData {
     private static GridCellMetaData _gridCellMetaData = new GridCellMetaData();
-    private static final int _maxNumberOfConsecutiveDigits = 6;
-    private Map<Integer, Integer> _numberOfConsecutiveDigits = new TreeMap();
+    private static final int _maxNumberOfDecimalPlaces = 6;
+    private Map<Integer, Integer> _numberOfDecimalPlaces = new TreeMap();
 
     private GridCellMetaData() {}
 
@@ -27,28 +27,28 @@ import java.util.TreeMap;
     }
 
     /**
-     * Returns the number of consecutive digits to be used for the ID for a given resolution and a given ID type
+     * Returns the number of decimal places to be used for the ID for a given resolution and a given ID type
      *
      * @param resolution
      * @param gridCellIDType
-     * @return number of consecutive digits
+     * @return number of decimal places
      */
-    public int numberOfConsecutiveDigits(int resolution, GridCellIDType gridCellIDType) {
-        if (gridCellIDType == GridCellIDType.NON_ADAPTIVE) return this._maxNumberOfConsecutiveDigits;
-        int nocd;
-        if (this._numberOfConsecutiveDigits.containsKey(resolution)) nocd = this._numberOfConsecutiveDigits.get(resolution);
+    public int numberOfDecimalPlaces(int resolution, GridCellIDType gridCellIDType) {
+        if (gridCellIDType == GridCellIDType.NON_ADAPTIVE) return this._maxNumberOfDecimalPlaces;
+        int nodp;
+        if (this._numberOfDecimalPlaces.containsKey(resolution)) nodp = this._numberOfDecimalPlaces.get(resolution);
         else {
             double distBetweenCells = 2 * (new ISEA3H(resolution)).lowerBoundForLengthOfASideOfHexagonalCellOnSphere();
-            nocd = (int)Math.ceil(-Math.log10(distBetweenCells / (2 * Math.PI * WGS84.radiusAuthalic / 360)));
-            this._numberOfConsecutiveDigits.put(resolution, nocd);
+            nodp = (int)Math.ceil(-Math.log10(distBetweenCells / (2 * Math.PI * WGS84.radiusAuthalic / 360)));
+            this._numberOfDecimalPlaces.put(resolution, nodp);
         }
         switch (gridCellIDType) {
             case ADAPTIVE_UNIQUE:
-                return Math.max(Math.min(nocd, this._maxNumberOfConsecutiveDigits), 0);
+                return Math.max(Math.min(nodp, this._maxNumberOfDecimalPlaces), 0);
             case ADAPTIVE_1_PERCENT:
-                return Math.max(Math.min(nocd + 2, this._maxNumberOfConsecutiveDigits), 0);
+                return Math.max(Math.min(nodp + 2, this._maxNumberOfDecimalPlaces), 0);
             default:
-                return this._maxNumberOfConsecutiveDigits;
+                return this._maxNumberOfDecimalPlaces;
         }
     }
 }

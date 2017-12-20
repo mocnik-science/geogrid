@@ -73,11 +73,11 @@ public class GridCell implements Comparable<GridCell> {
 
     public Long getID(GridCellIDType gridCellIDType) {
         if (this._id == null) {
-            int numberOfConsecutiveDigits = GridCellMetaData.getInstance().numberOfConsecutiveDigits(this.getResolution(), gridCellIDType);
-            double precisionPerDefinition = .5 * Math.pow(10, -numberOfConsecutiveDigits);
+            int numberOfDecimalPlaces = GridCellMetaData.getInstance().numberOfDecimalPlaces(this.getResolution(), gridCellIDType);
+            double precisionPerDefinition = .5 * Math.pow(10, -numberOfDecimalPlaces);
             long sgnLat = (this._lat < 0 && Math.abs(this._lat) >= precisionPerDefinition) ? 23 : 0;
             long sgnLon = (this._lon < 0 && Math.abs(this._lon) >= precisionPerDefinition && 180 - Math.abs(this._lon) >= precisionPerDefinition) ? 46 : 0;
-            this._id = (this._isPentagon ? -1 : 1) * ((this._resolution.longValue() + sgnLat + sgnLon) * (long) Math.pow(10, 2 * numberOfConsecutiveDigits + 5) + Math.abs(Math.round((this._lat + this._precision) * Math.pow(10, numberOfConsecutiveDigits))) * (long) Math.pow(10, numberOfConsecutiveDigits + 3) + Math.abs(Math.round((this._lon + this._precision) * Math.pow(10, numberOfConsecutiveDigits))));
+            this._id = (this._isPentagon ? -1 : 1) * ((this._resolution.longValue() + sgnLat + sgnLon) * (long) Math.pow(10, 2 * numberOfDecimalPlaces + 5) + Math.abs(Math.round((this._lat + this._precision) * Math.pow(10, numberOfDecimalPlaces))) * (long) Math.pow(10, numberOfDecimalPlaces + 3) + Math.abs(Math.round((this._lon + this._precision) * Math.pow(10, numberOfDecimalPlaces))));
         }
         return this._id;
     }
