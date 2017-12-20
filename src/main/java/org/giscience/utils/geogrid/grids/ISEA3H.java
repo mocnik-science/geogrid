@@ -572,7 +572,7 @@ public class ISEA3H {
         private GridCellIDType _gridCellIDType;
         private Integer _face = null;
         private int _chunk = 0;
-        private static final int _chunkSize = 300000000;
+        private static final int _chunkSize = 10000000;
 
         public CellAggregatorByCellIDsToFile(String filename, GridCellIDType gridCellIDType) {
             this._filename = filename;
