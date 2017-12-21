@@ -2,6 +2,9 @@ package org.giscience.utils.geogrid.cells;
 
 import org.giscience.utils.geogrid.geometry.GeoCoordinates;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Grid cell
  *
@@ -14,7 +17,7 @@ public class GridCell implements Comparable<GridCell> {
     private final double _lat;
     private final double _lon;
     private final boolean _isPentagon;
-    private Long _id = null;
+    private Map<GridCellIDType, Long> _id = new HashMap();
 
     public GridCell(int resolution, double lat, double lon, boolean isPentagon) throws Exception {
         if (resolution < 1 || resolution > 23) throw new Exception("resolution must be between 1 and 23");
@@ -72,14 +75,16 @@ public class GridCell implements Comparable<GridCell> {
     }
 
     public Long getID(GridCellIDType gridCellIDType) {
-        if (this._id == null) {
+        Long id = this._id.getOrDefault(gridCellIDType, null);
+        if (id == null) {
             int numberOfDecimalPlaces = GridCellMetaData.getInstance().numberOfDecimalPlaces(this.getResolution(), gridCellIDType);
             double precisionPerDefinition = .5 * Math.pow(10, -numberOfDecimalPlaces);
             long sgnLat = (this._lat <= -precisionPerDefinition) ? 23 : 0;
             long sgnLon = (this._lon <= -precisionPerDefinition && 180 - Math.abs(this._lon) >= precisionPerDefinition) ? 46 : 0;
-            this._id = (this._isPentagon ? -1 : 1) * ((this._resolution.longValue() + sgnLat + sgnLon) * (long) Math.pow(10, 2 * numberOfDecimalPlaces + 5) + Math.abs(Math.round((this._lat + this._precision) * Math.pow(10, numberOfDecimalPlaces))) * (long) Math.pow(10, numberOfDecimalPlaces + 3) + Math.abs(Math.round((this._lon + this._precision) * Math.pow(10, numberOfDecimalPlaces))));
+            id = (this._isPentagon ? -1 : 1) * ((this._resolution.longValue() + sgnLat + sgnLon) * (long) Math.pow(10, 2 * numberOfDecimalPlaces + 5) + Math.abs(Math.round((this._lat + this._precision) * Math.pow(10, numberOfDecimalPlaces))) * (long) Math.pow(10, numberOfDecimalPlaces + 3) + Math.abs(Math.round((this._lon + this._precision) * Math.pow(10, numberOfDecimalPlaces))));
+            this._id.put(gridCellIDType, id);
         }
-        return this._id;
+        return id;
     }
 
     public boolean equals(Object o) {
