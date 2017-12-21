@@ -3,8 +3,8 @@ package org.giscience.utils.geogrid.cells;
 import org.giscience.utils.geogrid.geo.WGS84;
 import org.giscience.utils.geogrid.grids.ISEA3H;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeMap;
 
 /**
  * Meta data for a grid cell
@@ -13,7 +13,7 @@ import java.util.TreeMap;
  */public class GridCellMetaData {
     private static GridCellMetaData _gridCellMetaData = new GridCellMetaData();
     private static final int _maxNumberOfDecimalPlaces = 6;
-    private Map<Integer, Integer> _numberOfDecimalPlaces = new TreeMap();
+    private Map<Integer, Integer> _numberOfDecimalPlaces = new HashMap();
 
     private GridCellMetaData() {}
 
