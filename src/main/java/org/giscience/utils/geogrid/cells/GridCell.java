@@ -66,6 +66,10 @@ public class GridCell implements Comparable<GridCell> {
      *     .5e-6. The longitude is expected to be greater than -180 and strictly less than 180 degrees.</li>
      * </ul>
      *
+     * If the grid cell type ADAPTIVE_UNIQUE is provided, the values for latitude and longitude are only encoded with
+     * the precision required to guarantee uniqueness of the IDs.  In case of ADAPTIVE_1_PERCENT, the values for
+     * latitude and longitude are encoded with two more decimal places as in the previous case.
+     *
      * The ID is only valid for resolution smaller less or equal 22.
      *
      * @return ID of the cell
