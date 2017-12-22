@@ -20,7 +20,7 @@ public class GridCell implements Comparable<GridCell> {
     private Map<GridCellIDType, Long> _id = new HashMap();
 
     public GridCell(int resolution, double lat, double lon, boolean isPentagon) throws Exception {
-        if (resolution < 1 || resolution > 23) throw new Exception("resolution must be between 1 and 23");
+        if (resolution < 1 || resolution > 22) throw new Exception("resolution must be between 1 and 22");
         this._resolution = resolution;
         if (lat < -90 || lat > 90) throw new Exception("invalid latitude");
         if (lat < -90 + GridCell._precisionPerDefinition || lat > 90 - GridCell._precisionPerDefinition) lon = 0;
@@ -56,8 +56,8 @@ public class GridCell implements Comparable<GridCell> {
      * Returns the ID of the cell. The ID consists of the following elements:
      * <ul>
      *     <li>The leading sign is positive in case of a hexagon, and negative in case of a pentagon.</li>
-     *     <li>This first two digits consist of the resolution incremented by 23 in case of negative latitude, by 46 in
-     *     case of negative longitude, and by 69 in case of negative latitude and longitude. In case that the
+     *     <li>This first two digits consist of the resolution incremented by 22 in case of negative latitude, by 44 in
+     *     case of negative longitude, and by 66 in case of negative latitude and longitude. In case that the
      *     latitude/longitude is strictly less than .5e-6, or that the difference of longitude to 180 or -180 degrees is
      *     strictly less than .5e-6, the respective sign is always regarded as being positive.</li>
      *     <li>The consecutive digits consist of the latitude, with two pre-decimal and six decimal places.</li>
@@ -66,7 +66,7 @@ public class GridCell implements Comparable<GridCell> {
      *     .5e-6. The longitude is expected to be greater than -180 and strictly less than 180 degrees.</li>
      * </ul>
      *
-     * The ID is only valid for resolution smaller less or equal 32.
+     * The ID is only valid for resolution smaller less or equal 22.
      *
      * @return ID of the cell
      */
@@ -79,8 +79,8 @@ public class GridCell implements Comparable<GridCell> {
         if (id == null) {
             int numberOfDecimalPlaces = GridCellMetaData.getInstance().numberOfDecimalPlaces(this.getResolution(), gridCellIDType);
             double precisionPerDefinition = .5 * Math.pow(10, -numberOfDecimalPlaces);
-            long sgnLat = (this._lat <= -precisionPerDefinition) ? 23 : 0;
-            long sgnLon = (this._lon <= -precisionPerDefinition && 180 - Math.abs(this._lon) >= precisionPerDefinition) ? 46 : 0;
+            long sgnLat = (this._lat <= -precisionPerDefinition) ? 22 : 0;
+            long sgnLon = (this._lon <= -precisionPerDefinition && 180 - Math.abs(this._lon) >= precisionPerDefinition) ? 44 : 0;
             id = (this._isPentagon ? -1 : 1) * ((this._resolution.longValue() + sgnLat + sgnLon) * (long) Math.pow(10, 2 * numberOfDecimalPlaces + 5) + Math.abs(Math.round((this._lat + this._precision) * Math.pow(10, numberOfDecimalPlaces))) * (long) Math.pow(10, numberOfDecimalPlaces + 3) + Math.abs(Math.round((this._lon + this._precision) * Math.pow(10, numberOfDecimalPlaces))));
             this._id.put(gridCellIDType, id);
         }
