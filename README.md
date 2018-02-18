@@ -86,19 +86,34 @@ for (GridCell gc : cells) {
 }
 ```
 
+Different cell IDs can be computed: *non-adaptive IDs*, which include the geometry of the cell in a heigh precision; *adaptive 1% IDs*, which include the geometry in a scale dependent but yet reasonable precision; and *adaptive unique IDs*, which only aim for being as short as possible while preserving uniqueness.  See [tba](tba) for further information.
+
+By default, non-adaptive IDs are returned.  The type of ID can though be inserted explicitly as follows:
+
+```java
+gc.getID(NON_ADAPTIVE);
+gc.getID(ADAPTIVE_UNIQUE);
+gc.getID(ADAPTIVE_1_PERCENT);
+```
+
+### ISEA3H DGGS: Computing Cell IDs only
+
 In case that just the identifiers (IDs) of the cells should be computed, two more efficient methods can be used:
 
 ```java
 ISEA3H grid = new ISEA3H(10);
-Collection<Long> cells = grid.cellsIDsForBound(41, 42, 6, 7);
-Collection<Long> cellsAll = grid.cellsIDs();
+Collection<Long> cells = grid.cellIDsForBound(41, 42, 6, 7);
+Collection<Long> cells2 = grid.cellIDsForBound(41, 42, 6, 7, ADAPTIVE_UNIQUE);
+Collection<Long> cellsAll = grid.cellIDs();
+Collection<Long> cellsAll2 = grid.cellIDs(ADAPTIVE_UNIQUE);
 ```
 
 The IDs can even be saved to the hard disc:
 
 ```java
 ISEA3H grid = new ISEA3H(10);
-grid.cellsIDs("path/filename");
+grid.cellIDs("path/filename");
+grid.cellIDs("path/filename2", ADAPTIVE_UNIQUE);
 ```
 
 Each of the created files contains only IDs that refer to one face of the icosahedron, and the data is divided into a number of chunks.  The same ID can occur multiple times (for different faces) when it refers to a cell that is partially contained in different faces.  The files are named as `filename.face.chunk_number`.  The first part of this name refers to the filename provided in the method `cellsIDs`; the second part, to the face to which the IDs contained in the file belong to; and the third part consists of consecutive numbers to distinguish the chunks.
