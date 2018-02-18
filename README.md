@@ -86,14 +86,24 @@ for (GridCell gc : cells) {
 }
 ```
 
-Different cell IDs can be computed: *non-adaptive IDs*, which include the geometry of the cell in a heigh precision; *adaptive 1% IDs*, which include the geometry in a scale dependent but yet reasonable precision; and *adaptive unique IDs*, which only aim for being as short as possible while preserving uniqueness.  See [tba](tba) for further information.
+Different types of cell IDs can be used:
+
+| Type of ID | Description | Typical use |
+| ---------- | ----------- | ----------- |
+| `NON_ADAPTIVE` | *Non-adaptive IDs* include the geometry of the cell in a heigh precision. | Perfect rendering of the grid cells |
+| `ADAPTIVE_1_PERCENT` | *Adaptive 1% IDs* include the geometry in a scale dependent but yet reasonable precision. | Rendering of the grid cells on a website |
+| `ADAPTIVE_1_PERCENT` | *Adaptive unique IDs* aim at being as short as possible while preserving uniqueness. | Comparison of whether two cells are identical |
+
+Further information can be found in:
+
+tba
 
 By default, non-adaptive IDs are returned.  The type of ID can though be inserted explicitly as follows:
 
 ```java
 gc.getID(NON_ADAPTIVE);
-gc.getID(ADAPTIVE_UNIQUE);
 gc.getID(ADAPTIVE_1_PERCENT);
+gc.getID(ADAPTIVE_UNIQUE);
 ```
 
 ### ISEA3H DGGS: Computing Cell IDs only
