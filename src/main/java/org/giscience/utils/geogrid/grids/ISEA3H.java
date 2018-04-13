@@ -608,14 +608,13 @@ public class ISEA3H {
 
         private void _writeChunkToFile() throws IOException {
             Collections.sort(this._cells);
-            FileWriter fileWriter = new FileWriter(new File(this._filename + ".face" + this._face + "." + this._chunk));
-            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
-            for (Long a : this._cells) {
-                bufferedWriter.append(a.toString());
-                bufferedWriter.newLine();
+            File file = new File(this._filename + ".face" + this._face + "." + this._chunk);
+            try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file))){
+                for (Long a : this._cells) {
+                    bufferedWriter.append(a.toString());
+                    bufferedWriter.newLine();
+                }
             }
-            bufferedWriter.close();
-            fileWriter.close();
             this._chunk++;
             this._cells = new ArrayList<>();
         }
