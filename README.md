@@ -6,7 +6,7 @@ The library `geogrid` provides methods to generate and handle the ISEA Aperture 
 
 An overview of the ISEA3H DGGS and the identifier used in this library can be found in:
 
-* F-B Mocnik: **A Novel Identifier Scheme for the ISEA Aperture 3 Hexagon Discrete Global Grid System.** Cartography and Geographic Information science, 2018, to appear
+* F-B Mocnik: [**A Novel Identifier Scheme for the ISEA Aperture 3 Hexagon Discrete Global Grid System.**](http://doi.org/10.1080/15230406.2018.1455157) Cartography and Geographic Information science, 2018
 
 The ISEA3H has originally been proposed by:
 
