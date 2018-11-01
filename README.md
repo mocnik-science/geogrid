@@ -14,7 +14,7 @@ The ISEA3H has originally been proposed by:
 
 The projection has been proposed and has been described in detail by:
 
-* J P Snyder: [**An equal-area map projection for polyhedral globes**](http://doi.org/http://doi.org/10.3138/27H7-8K88-4882-1752). Cartographica, 29(1), 1992, 10–21. doi:10.3138/27H7-8K88-4882-1752
+* J P Snyder: [**An equal-area map projection for polyhedral globes**](http://doi.org/10.3138/27H7-8K88-4882-1752). Cartographica, 29(1), 1992, 10–21. doi:10.3138/27H7-8K88-4882-1752
 
 ## Related Software
 
