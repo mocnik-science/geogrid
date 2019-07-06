@@ -74,7 +74,7 @@ public class ISEA3H {
         this._l2 = this._l / 2.;
         this._l6 = this._l / 6.;
         this._l23 = this._l * 2 / 3.;
-        this._inverseSqrt3l = this._inverseSqrt3 * this._l;
+        this._inverseSqrt3l = Math.pow(this._inverseSqrt3, this._resolution) * this._l0;
         this._inverseSqrt3l2 = this._inverseSqrt3l / 2.;
         this._triangleA = this._l0 / 2.;
         this._triangleB = this._inverseSqrt3l0;
