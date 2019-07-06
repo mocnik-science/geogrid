@@ -1,9 +1,9 @@
 package org.giscience.utils.geogrid.projections;
 
-import org.giscience.utils.geogrid.geo.WGS84;
-import org.giscience.utils.geogrid.geometry.GeoCoordinates;
-import org.giscience.utils.geogrid.geometry.FaceCoordinates;
 import org.giscience.utils.geogrid.generic.Trigonometric;
+import org.giscience.utils.geogrid.geo.WGS84;
+import org.giscience.utils.geogrid.geometry.FaceCoordinates;
+import org.giscience.utils.geogrid.geometry.GeoCoordinates;
 
 import java.util.ArrayList;
 import java.util.List;
