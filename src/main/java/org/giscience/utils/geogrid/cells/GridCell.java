@@ -12,7 +12,7 @@ import java.util.Map;
  */
 public class GridCell implements Comparable<GridCell> {
     private static final double _precision = 1e-9;
-    private static final double _precisionPerDefinition = .5e-6;
+    private static final double _precisionPerDefinition = 1e-5;
     private final Integer _resolution;
     private final double _lat;
     private final double _lon;

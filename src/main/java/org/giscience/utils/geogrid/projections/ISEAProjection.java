@@ -61,6 +61,7 @@ public class ISEAProjection {
     private final int[] __lons = new int[20];
     // precision
     private static final double _precision = 1e-9;
+    private static final double _precisionPerDefinition = 1e-5;
     // computed values
     private final double _2R; // 2 R'
     private final double __EF; // E - F
@@ -201,13 +202,16 @@ public class ISEAProjection {
      * @throws Exception
      */
     public GeoCoordinates _revertOrientation(GeoCoordinates c) throws Exception {
+        if (this._orientationLat == 0 && this._orientationLon == 0) return (c.getLat() < -90 + ISEAProjection._precisionPerDefinition || c.getLat() > 90 - ISEAProjection._precisionPerDefinition) ? new GeoCoordinates(c.getLat(), 0.) : c;
+        double lon = c.getLon();
+        if (c.getLat() < -90 + ISEAProjection._precisionPerDefinition || c.getLat() > 90 - ISEAProjection._precisionPerDefinition) lon = 0;
         if (this._orientationLat == 0 && this._orientationLon == 0) return c;
         double sinOrientationLat = Trigonometric.sin(-this._orientationLat);
         double cosOrientationLat = Trigonometric.cos(this._orientationLat);
         double sinLat1 = Trigonometric.sin(c.getLat());
         double cosLat1 = Trigonometric.cos(c.getLat());
-        double sinLon1 = Trigonometric.sin(c.getLon());
-        double cosLon1 = Trigonometric.cos(c.getLon());
+        double sinLon1 = Trigonometric.sin(lon);
+        double cosLon1 = Trigonometric.cos(lon);
         double lat2 = Trigonometric.asin(sinLat1 * cosOrientationLat + cosLon1 * cosLat1 * sinOrientationLat);
         double lon2 = Trigonometric.atan2(sinLon1 * cosLat1, cosLon1 * cosLat1 * cosOrientationLat - sinLat1 * sinOrientationLat);
         return new GeoCoordinates(lat2, lon2 - this._orientationLon);
