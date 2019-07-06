@@ -18,34 +18,55 @@ public class ISEA3HTest {
 
     @Test
     public void numberOfCellsByNumber() {
-        this._numberOfCellsByNumber(1, 20);
-        this._numberOfCellsByNumber(2, 80);
-        this._numberOfCellsByNumber(3, 260);
-        this._numberOfCellsByNumber(4, 800);
-        this._numberOfCellsByNumber(15, 143489060);
-        this._numberOfCellsByNumber(16, 430467200);
+        this.numberOfCellsByNumber(false);
     }
-    public void _numberOfCellsByNumber(int resolution, int numberOfHexagonalCells) {
-        ISEA3H grid = new ISEA3H(resolution);
+    @Test
+    public void numberOfCellsByNumberRotated() {
+        this.numberOfCellsByNumber(true);
+    }
+    public void numberOfCellsByNumber(boolean rotatedProjection) {
+        this._numberOfCellsByNumber(1, 20, rotatedProjection);
+        this._numberOfCellsByNumber(2, 80, rotatedProjection);
+        this._numberOfCellsByNumber(3, 260, rotatedProjection);
+        this._numberOfCellsByNumber(4, 800, rotatedProjection);
+        this._numberOfCellsByNumber(15, 143489060, rotatedProjection);
+        this._numberOfCellsByNumber(16, 430467200, rotatedProjection);
+    }
+    public void _numberOfCellsByNumber(int resolution, int numberOfHexagonalCells, boolean rotatedProjection) {
+        ISEA3H grid = new ISEA3H(resolution, rotatedProjection);
         assertEquals(grid.numberOfHexagonalCells(), numberOfHexagonalCells);
         assertEquals(grid.numberOfPentagonalCells(), 12);
     }
 
     @Test
     public void numberOfCellsByArea() {
-        for (int r = 1; r < 19; r++) this._numberOfCellsByArea(r);
+        this.numberOfCellsByArea(false);
     }
-    public void _numberOfCellsByArea(int resolution) {
-        ISEA3H grid = new ISEA3H(resolution);
+    @Test
+    public void numberOfCellsByAreaRotated() {
+        this.numberOfCellsByArea(true);
+    }
+    public void numberOfCellsByArea(boolean rotatedProjection) {
+        for (int r = 1; r < 19; r++) this._numberOfCellsByArea(r, rotatedProjection);
+    }
+    public void _numberOfCellsByArea(int resolution, boolean rotatedProjection) {
+        ISEA3H grid = new ISEA3H(resolution, rotatedProjection);
         assertTrue(grid.numberOfHexagonalCells() * grid.areaOfAHexagonalCell() + grid.numberOfPentagonalCells() * grid.areaOfAPentagonalCell() - WGS84.areaOfEarth < WGS84.areaOfEarth * this._precision2);
     }
 
     @Test
     public void numberOfCellsByGrid() throws Exception {
-        for (int r = 1; r <= 12; r++) this._numberOfCellsByGrid(r);
+        this.numberOfCellsByGrid(false);
     }
-    public void _numberOfCellsByGrid(int resolution) throws Exception {
-        ISEA3H grid = new ISEA3H(resolution);
+    @Test
+    public void numberOfCellsByGridRotated() throws Exception {
+        this.numberOfCellsByGrid(true);
+    }
+    public void numberOfCellsByGrid(boolean rotatedProjection) throws Exception {
+        for (int r = 1; r <= 12; r++) this._numberOfCellsByGrid(r, rotatedProjection);
+    }
+    public void _numberOfCellsByGrid(int resolution, boolean rotatedProjection) throws Exception {
+        ISEA3H grid = new ISEA3H(resolution, rotatedProjection);
         long cells = grid.cells().size();
         long cellsExpected = grid.numberOfHexagonalCells() + grid.numberOfPentagonalCells();
         System.out.format("resolution %d - %d - %d\n", resolution, cells, cellsExpected);
