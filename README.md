@@ -96,7 +96,7 @@ Different types of cell IDs can be used:
 
 Further information can be found in:
 
-tba
+* F-B Mocnik: [**A Novel Identifier Scheme for the ISEA Aperture 3 Hexagon Discrete Global Grid System.**](http://doi.org/10.1080/15230406.2018.1455157) Cartography and Geographic Information Science 46(3), 2019, 227–291
 
 By default, non-adaptive IDs are returned.  The type of ID can though be inserted explicitly as follows:
 
