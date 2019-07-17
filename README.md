@@ -18,7 +18,7 @@ The projection has been proposed and has been described in detail by:
 
 ## Related Software
 
-Data aggregated by a DGGS can be presented in the browser by using the JavaScript library [**geogrid.js**](https://github.com/mocnik-science/geogrid.js), which visualizes such data as a layer to [Leaflet](http://leafletjs.com).  Data aggregation can even be performed automatically by the framework [**Measures REST**](https://github.com/giscience/measures-rest), which even provides the aggregated data by a REST interface.
+Data aggregated by a DGGS can be presented in the browser by using the JavaScript library [**geogrid.js**](https://github.com/mocnik-science/geogrid.js), which visualizes such data as a layer to [Leaflet](http://leafletjs.com).  Data aggregation can even be performed automatically by the framework [**Measures REST**](https://github.com/giscience/measures-rest), which even provides the aggregated data via a REST interface.
 
 ## Short Overview
 
