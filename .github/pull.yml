@@ -1,0 +1,8 @@
+version: "1"
+rules:
+  - base: master
+    upstream: mocnik-science:master
+    mergeMethod: hardreset
+  - base: develop
+    upstream: mocnik-science:develop
+    mergeMethod: hardreset
