@@ -1,14 +1,12 @@
 package org.giscience.utils.geogrid.examples;
 
-import org.giscience.utils.geogrid.cells.GridCellMetaData;
+import org.giscience.utils.geogrid.cells.GridCell;
 import org.giscience.utils.geogrid.geometry.FaceCoordinates;
 import org.giscience.utils.geogrid.geometry.GeoCoordinates;
-import org.giscience.utils.geogrid.cells.GridCell;
 import org.giscience.utils.geogrid.grids.ISEA3H;
-import org.giscience.utils.geogrid.cells.GridCellIDType;
 import org.giscience.utils.geogrid.projections.ISEAProjection;
 
-import java.util.*;
+import java.util.Collection;
 
 /**
  * Demonstrates the use of the projection from the sphere to the icosahedron and back, as well as the use of the ISEA3H

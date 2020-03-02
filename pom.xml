@@ -14,9 +14,9 @@
             <type>jar</type>
         </dependency>
         <dependency>
-            <groupId>com.vividsolutions</groupId>
+            <groupId>org.locationtech.jts</groupId>
             <artifactId>jts-core</artifactId>
-            <version>1.14.0</version>
+            <version>1.16.1</version>
         </dependency>
     </dependencies>
     <properties>

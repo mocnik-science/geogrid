@@ -1,14 +1,14 @@
 package org.giscience.utils.geogrid.grids;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
+import org.giscience.utils.geogrid.cells.GridCell;
+import org.giscience.utils.geogrid.cells.GridCellIDType;
 import org.giscience.utils.geogrid.generic.Tuple;
 import org.giscience.utils.geogrid.geo.WGS84;
 import org.giscience.utils.geogrid.geometry.FaceCoordinates;
 import org.giscience.utils.geogrid.geometry.GeoCoordinates;
-import org.giscience.utils.geogrid.cells.GridCell;
-import org.giscience.utils.geogrid.cells.GridCellIDType;
 import org.giscience.utils.geogrid.projections.ISEAProjection;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
 
 import java.io.BufferedWriter;
 import java.io.File;
