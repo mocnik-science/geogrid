@@ -2,6 +2,7 @@ package org.giscience.utils.geogrid.cells;
 
 import org.giscience.utils.geogrid.geometry.GeoCoordinates;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,7 +11,7 @@ import java.util.Map;
  *
  * @author Franz-Benjamin Mocnik
  */
-public class GridCell implements Comparable<GridCell> {
+public class GridCell implements Comparable<GridCell>, Serializable {
     private static final double _precision = 1e-9;
     private static final double _precisionPerDefinition = 1e-5;
     private final Integer _resolution;
