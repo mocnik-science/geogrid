@@ -83,6 +83,13 @@ public class ISEA3H {
     }
 
     /**
+     * Get the resolution.
+     */
+    public Integer getResolution() {
+        return this._resolution
+    }
+
+    /**
      * Set the number of threads.
      *
      * By default, 8 threads are used.
