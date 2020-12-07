@@ -86,7 +86,7 @@ public class ISEA3H {
      * Get the resolution.
      */
     public Integer getResolution() {
-        return this._resolution
+        return this._resolution;
     }
 
     /**
