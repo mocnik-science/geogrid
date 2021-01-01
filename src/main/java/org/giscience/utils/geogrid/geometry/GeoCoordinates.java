@@ -1,6 +1,7 @@
 package org.giscience.utils.geogrid.geometry;
 
 import org.giscience.utils.geogrid.generic.Trigonometric;
+import org.giscience.utils.geogrid.geo.WGS84;
 
 /**
  * Geographic coordinates of a location on Earth.
@@ -29,7 +30,7 @@ public class GeoCoordinates implements Comparable<GeoCoordinates> {
     }
 
     public Double distanceTo(GeoCoordinates other) {
-        return Trigonometric.acos(Trigonometric.sin(this.getLat()) * Trigonometric.sin(other.getLat()) + Trigonometric.cos(this.getLat()) * Trigonometric.cos(other.getLat()) * Trigonometric.cos(this.getLon() - other.getLon()));
+        return WGS84.radiusAuthalic * 2 * Math.asin(Math.sqrt(Math.pow(Trigonometric.sin((this.getLat() - other.getLat()) / 2), 2) + Math.pow(Trigonometric.sin((this.getLon() - other.getLon()) / 2), 2) * Trigonometric.cos(this.getLat()) * Trigonometric.cos(other.getLat())));
     }
 
     @Override
