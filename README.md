@@ -6,15 +6,15 @@ The library `geogrid` provides methods to generate and handle the ISEA Aperture 
 
 An overview of the ISEA3H DGGS and the identifier scheme used in this library can be found in:
 
-* F-B Mocnik: [**A Novel Identifier Scheme for the ISEA Aperture 3 Hexagon Discrete Global Grid System.**](http://doi.org/10.1080/15230406.2018.1455157) Cartography and Geographic Information Science 46(3), 2019, 227–291
+* FB Mocnik: [**A Novel Identifier Scheme for the ISEA Aperture 3 Hexagon Discrete Global Grid System.**](http://doi.org/10.1080/15230406.2018.1455157) Cartography and Geographic Information Science 46(3), 2019, 227–291
 
 The ISEA3H has originally been proposed by:
 
-* K Sahr, D White, and A J Kimerling: [**Geodesic Discrete Global Grid Systems**](http://doi.org/10.1559/152304003100011090). Cartography and Geographic Information Science, 30(2), 2003, 121–134. doi:10.1559/152304003100011090
+* K Sahr, D White, and AJ Kimerling: [**Geodesic Discrete Global Grid Systems**](http://doi.org/10.1559/152304003100011090). Cartography and Geographic Information Science, 30(2), 2003, 121–134. doi:10.1559/152304003100011090
 
 The projection has been proposed and has been described in detail by:
 
-* J P Snyder: [**An equal-area map projection for polyhedral globes**](http://doi.org/10.3138/27H7-8K88-4882-1752). Cartographica, 29(1), 1992, 10–21. doi:10.3138/27H7-8K88-4882-1752
+* JP Snyder: [**An equal-area map projection for polyhedral globes**](http://doi.org/10.3138/27H7-8K88-4882-1752). Cartographica, 29(1), 1992, 10–21. doi:10.3138/27H7-8K88-4882-1752
 
 ## Related Software
 
