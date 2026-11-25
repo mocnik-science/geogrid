@@ -196,4 +196,4 @@ All commits before 8/2019 (c) by Heidelberg University, 2017–2019.
 
 ## License
 
-The code is licensed under the [MIT license](https://github.com/mocnik-science/geogrid/blob/master/LICENSE).
+The code is licensed both under the [MIT license](https://github.com/mocnik-science/geogrid/blob/master/LICENSE) and under the [Apache 2.0 license](https://www.apache.org/licenses/LICENSE-2.0).
